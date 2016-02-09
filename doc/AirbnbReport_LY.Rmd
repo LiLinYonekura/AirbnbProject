@@ -1,0 +1,142 @@
+---
+title: "AirbnbReport"
+author: "LiLin Yonekura"
+date: "February 2016"
+output: html_document
+---
+
+==========================================
+**Airbnb Booking Analysis**
+*BDA - INSEAD MBA 16J*
+
+## Business motivation
+<br>
+
+## Data Description
+ 
+First, let's look at the data
+
+```{r echo=FALSE, eval=TRUE}
+#install.packages("Rcpp")
+#library(Rcpp)
+#knitr::opts_chunk$set(error = TRUE)
+chooseCRANmirror(ind=1)
+install.packages("readxl")
+library(readxl) 
+```
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#source("../R/Library.R")
+# Troubleshooting for dplyr: put in command --> install.packages("dplyr",repos = "http://cran.us.r-project.org")
+
+### LiLin: the code for filepaths is different from Shiksha's
+### LiLin: reading data from excel file
+  
+airbnbdata = read_excel("../data/Airbnb_data.xlsx")
+library(googleVis)
+t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
+#print(t1,'chart')
+plot(t1)
+```
+
+It is very important to understand the columns, let's review its content:
+
+* **id_visitor**: the id of the visitor
+* **id_session**: the id of the session
+* **dim_session_number**: the number of session on a given day for a visitor
+* **dim_user_agent**: the user agent of the session
+* **dim_device_app_combo**: the parsed out device/app combo from user agent
+* **ds**: date stamp of session
+* **ts_min**: time of session start
+* **ts_max**: time of session end
+* **did_search**: binary flag indicating if the visitor performed a search during the session
+* **sent_message**: binary flag indicating if the visitor sent a message during the session
+* **sent_booking_request**: binary flag indicating if the visitor sent a booking request during the session
+
+<br>
+## Introductory analysis
+<br>
+
+##### Li Lin's part
+
+Frequency of sessions by month:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+chooseCRANmirror(ind=1)
+install.packages("readxl")
+library(readxl) 
+airbnbdata = read_excel("../data/Airbnb_data.xlsx")
+library(googleVis)
+
+require(lubridate)
+library(lubridate)
+dates <- airbnbdata[,"ds"]
+#dates <- as.matrix(dates)
+dates_m <- month(dates)
+dates_m <- t(t(dates_m))
+
+hist(dates_m, breaks= 0:12, col="lightblue", labels=TRUE, ylim=c(0,1400))
+library(ggplot2)
+#qplot(dates_m, geom="histogram", binwidth=1)
+```
+
+<br>
+Frequency of sessions by day of week (based on start time):
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+dates_day <- wday(dates, label=T)
+dates_day <- t(t(dates_day))
+
+dat <- as.Date(dates)
+Dayofweek_a <- format(dat , "%a")   #day of week
+Dayofweek <- as.numeric( format(dat , "%w") ) # numeric version of day of week
+hist(Dayofweek , breaks= -.5+0:7, labels= unique(Dayofweek_a[order(Dayofweek)]))
+```
+
+<br>
+Frequency of sessions by hour of day:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+dates_min <- airbnbdata[,"ts_min"]
+dates_h <- hour(dates_min)
+dates_h <- t(t(dates_h))
+
+hist(dates_h, breaks=24, col="lightblue", labels=TRUE, xlim=c(0,24), ylim=c(0,1200))
+#qplot(dates_h, geom="histogram", binwidth=1)
+```
+<br>
+
+And number of sessions by hour-blocks during the day:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+hist(dates_h, breaks=4, col="lightblue", labels=TRUE, xlim=c(0,24), ylim=c(0,3000))
+```
+
+<br>
+
+This is the distribution of session duration in minutes:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+airbnbdata$ts_diff <- airbnbdata$ts_max - airbnbdata$ts_min
+airbnbdata$ts_diff <- airbnbdata$ts_diff / 60
+airbnbdata$ts_diff <- as.numeric(airbnbdata$ts_diff)
+hist(airbnbdata$ts_diff, main="Distribution of session duration (min)", col="lightblue", breaks=200, xlim=c(0,200))
+```
+
+<br>
+
+This is the distribution of total time spent by each user in one day (minutes):
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+if(!require(magrittr)){
+    install.packages("magrittr")
+    library(magrittr)
+}
+if(!require(dplyr)){
+    install.packages("dplyr")
+    library(dplyr)
+}
+airbnbdata$id_ds <- paste(airbnbdata$id_visitor,airbnbdata$ds)
+airbnbdata$flag <- 1
+
+time_user_day <-  group_by(airbnbdata, id_ds) %>% summarise(time = sum(ts_diff))
+hist(time_user_day$time, main="Disbribution of total time spent per day by each user",col="lightblue", breaks=200, xlim=c(0,200), ylim=c(0,2500))
+```
+
+<br>
+
+<br>
