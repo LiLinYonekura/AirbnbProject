@@ -21,6 +21,21 @@ In the case of a company such as Airbnb, where customers rent rooms or apartment
 For this case, we have selected a public shared file with data from customers, and we will guide you through the different data that the file contains, and the different measures that we find interesting in order to analyze customers' behaviour. 
 
 
+It is very important to understand the columns, let's review its content:
+
+* **id_visitor**: the id of the visitor
+* **id_session**: the id of the session
+* **dim_session_number**: the number of session on a given day for a visitor
+* **dim_user_agent**: the user agent of the session
+* **dim_device_app_combo**: the parsed out device/app combo from user agent
+* **ds**: date stamp of session
+* **ts_min**: time of session start
+* **ts_max**: time of session end
+* **did_search**: binary flag indicating if the visitor performed a search during the session
+* **sent_message**: binary flag indicating if the visitor sent a message during the session
+* **sent_booking_request**: binary flag indicating if the visitor sent a booking request during the session
+
+
 <br>
 ##ANA
 
@@ -47,8 +62,26 @@ Before any other analysis, let's look at these ratios for the global set of cust
 int1 <- ProjectData[ProjectData$sent_booking_request == 1,]
 int2 <- select(int1, totalbookings = sum(sent_booking_request))
 int3 <- summarise(int2, percbookings = sum(totalbookings)*100/nrow(ProjectData))
-print(int3)
+numbookings <- paste(round(int3$percbookings, digits = 2), "%", sep="")
+
+int4 <- ProjectData[ProjectData$sent_message == 1,]
+int5 <- select(int4, totalmessages = sum(sent_message))
+int6 <- summarise(int5, percmessage = sum(totalmessages)*100/nrow(ProjectData))
+nummessages <- paste(round(int6$percmessage, digits = 2), "%", sep="")
+
+int7 <- int4[int4$sent_booking_request == 1,]
+int8 <- select(int7, subbookings = sum(sent_booking_request))
+int9 <- summarise(int8, percmessage = sum(subbookings)*100/nrow(int4))
+numbookings2 <- paste(round(int9$percmessage, digits = 2), "%", sep="")
 ```
+
+**Summary**
+
+- Percentage of visits that end in bookings: `r numbookings`
+
+- Percentage of times user send a message: `r nummessages`
+
+- Percentage of times user booked after a message: `r numbookings2`
 
 
 ## Data Description
@@ -181,20 +214,6 @@ library(googleVis)
 t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
 print(t1,'chart')
 ```
-
-It is very important to understand the columns, let's review its content:
-
-* **id_visitor**: the id of the visitor
-* **id_session**: the id of the session
-* **dim_session_number**: the number of session on a given day for a visitor
-* **dim_user_agent**: the user agent of the session
-* **dim_device_app_combo**: the parsed out device/app combo from user agent
-* **ds**: date stamp of session
-* **ts_min**: time of session start
-* **ts_max**: time of session end
-* **did_search**: binary flag indicating if the visitor performed a search during the session
-* **sent_message**: binary flag indicating if the visitor sent a message during the session
-* **sent_booking_request**: binary flag indicating if the visitor sent a booking request during the session
 
 ## Introductory analysis
 
