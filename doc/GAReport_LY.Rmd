@@ -1,0 +1,280 @@
+
+ Google Analytics Case Study
+==========================================
+
+**Jesus Martin** - *INSEAD MBA 15J*
+
+jesus.martin.calvo@gmail.com
+ 
+## Business motivation
+ 
+ Developing a digital strategy has become a need for any company, regardless of their core business. That involves creating the online experiences, including websites, applications, social media or any marketing technique that communicates effectively with the users. Whether it is to build a brand or sell a product, these actions need to be measured to understand its success and improve them. However, most companies struggle with this "digital analytics". 
+ 
+ One of the main tools to measure activity of users in a website or other digital experience is Google Analytics (GA). It is free and allows you to understand most aspects of their behavior. Companies use it with different purposes, varying from deciding which marketing investments they should continue or stop as well as what messages in social networks have a higher impact for their business. 
+ 
+ This case will guide you to download some data from your GA account (if you do not have access to any, you can download some sample data from the website www.encortosabemejor.com) and show you some ways to understand how your website is performing in order to make managerial decisions. In this case it will help you to understand what content is generating higher user engagement so the company can focus on this type of content as well as understand whether this content should be focused on new readers so the community grows or to focus on existing readers so the community is more engaged. 
+ 
+ In addition to that, this case addresses some of the most fundamental issues in Data Analysis and Visualization: getting data from a source, clean, summarize and visualize. 
+ 
+ The sample data is downloaded from the GA account of the Spanish blog www.encortosabemejor.com and its analysis will help us to understand how the content is consumed by users. Some decisions that will have to be made with this information is to decide on what to write in the future, 
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, }
+source("../R/Library.R")
+if (!exists("gadata")) 
+  gadata <- within(read.csv("../data/GACaseStudyData.csv"),rm("X"))
+```
+
+## Data Description
+ 
+First, let's take a look at the first 1000 rows of data
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+t1 <- gvisTable(gadata[1:1000,],options = list(showRowNumber = TRUE, width = 1200, height = min(400,27*(nrow(gadata) + 1)), allowHTML = TRUE, page = 'disable'))
+print(t1,'chart')
+```
+
+It is very important that you understand each of the columns, let's review its content 
+
+* **year**: the year the data was collected
+* **month**: the month of the year the data was collected
+* **pagePath**: the URL of the page which the data belongs to, excluding the domain. 
+* **source**: the website where the visitor was before landing into our website. If there was no website or it is not recognized, the value is (direct)
+* **medium**: the mechanism by which the visitor landed in our website. Some values are: organic (search engine), cpc (paid advertising in search engines or other websites), referral (from other website), feed (from automated reading systems). If it is not recognized, the value is (none)
+* **userType**: whether the user had been before in the website or not (New Visitor/Returning Visitor)
+* **deviceCategory**: the device of the user
+* **entrances**: how many times a user entered the website through that page
+* **pageviews**: how many times a user opened that page
+* **exits**: how many times that page was the last one opened by a user in the same session
+* **timeOnPage**: how many seconds this page has been viewed
+* **uniquePageviews**: how many times this page has been viewed in an unique session
+
+From these columns we can have some derived metrics, for example:
+
+* **Average time on page**= timeOnPage/(pageviews-exits)
+* **Bounce rate**= exits/entrances
+* **Exit rate**= exits/pageviews
+
+## Introductory analysis
+
+For example, we can visualize the seasonality of the visits per month, measured by the number of entrances
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+entrpmonth <-  group_by(gadata, month) %>% summarise(entrances = sum(entrances))
+
+ggplot(entrpmonth, aes(x = month,y = entrances)) + geom_line() +
+  scale_x_discrete(breaks = seq(1:12))
+```
+
+And its evolution year by year
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+entrpyear <-  group_by(gadata, year) %>% summarise(entrances = sum(entrances))
+ggplot(entrpyear,aes(x = year, y = entrances)) + geom_bar(stat="identity", fill = "lightblue", colour = "black")
+```
+
+## Questions to solve
+
+In this case study, you will have to answer five questions which will help the website to improve the content that is creating. You will need to modify and visualize the data. For these purposes, you can use the package "dplyr" (get more info with browseVignettes(package = "dplyr") and the package "ggplot2" (get more info with ?ggplot or ?qplot)
+
+1. What are the pages with more visits? Are they the same when medium is not 'cpc'? Can you make a recommendation on the most popular pages?
+
+<br>
+Answer:
+<br> Most visits: /como-crear-una-plantilla-php-desde-cero/
+Most visit if medium is not cpc: same as above.
+
+It appears that the most common entry point to the website is this page which is about "Creating a PHP template from scratch" and people land at the page mainly via organic routes (search) so using paid advertising (cpc) to increase the number of visits may not be effective. 
+<br>
+Entrances by pagePath:
+```{r, echo=TRUE, message=FALSE, prompt=FALSE, results='asis'}
+#summary of visits by pagepath
+pageviewsppage <-  group_by(gadata, factor(pagePath)) %>% summarise(pageviews = sum(pageviews))
+pageviewsppage = data.frame(pages = pageviewsppage$`factor(pagePath)`, pageviews = pageviewsppage$pageviews) 
+pageviewsppage = pageviewsppage[sort(pageviewsppage$pageviews, decreasing =  TRUE, index.return = TRUE)$ix,] 
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+show_data = data.frame(pageviewsppage)
+m1 <- gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+<br>
+Entrances by pagePath excluding those via cpc:
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+gadata_nocpc = gadata[gadata$Medium != "cpc",]
+pageviewsppage <-  group_by(gadata_nocpc, factor(pagePath)) %>% summarise(pageviews = sum(pageviews))
+pageviewsppage = data.frame(pages = pageviewsppage$`factor(pagePath)`, pageviews = pageviewsppage$pageviews)
+pageviewsppage = pageviewsppage[sort(pageviewsppage$pageviews, decreasing =  TRUE, index.return = TRUE)$ix,]
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+show_data = data.frame(pageviewsppage)
+m1<-gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#alternative way to do summary of visits by pagepath x medium 
+
+# gadata_ex_cpc <- subset(gadata, Medium!="cpc")
+# entr_bypage_ex_cpc <-  group_by(gadata_ex_cpc, pagePath) %>% summarise(entrances = sum(entrances))
+# t_bypage_ex_cpc <- gvisTable(entr_bypage_ex_cpc,options = list(showRowNumber = TRUE, width = 800, height = min(400,27*(nrow(entr_bypage_ex_cpc) + 1)), allowHTML = TRUE, page = 'disable'))
+# plot(t_bypage_ex_cpc)
+```
+
+<br>
+Recommendation: 
+<br>
+For the top 3 pages from which users are entering the website, we can see that cpc has almost no impact, with the majority of visits coming from search, and some coming from referrals. It is likely that people arrive at these pages looking to get some specific information, so increasing the chances of these pages turning up on organic searches by putting in more keywords or somehow increasing the number of links posted on other websites will be effective in driving more visits. 
+
+<br>
+Here is the pivot table data for the top three pages in terms of mediums. (The pivot table is interactive. Row and column fields can be changed via drag & drop.)
+```{r, echo=TRUE, message=FALSE, prompt=FALSE, results='asis'}
+install_github("ramnathv/htmlwidgets") 
+install_github("smartinsightsfromdata/rpivotTable")
+library(rpivotTable)
+
+gadata_top3 <- subset(gadata, pagePath=="/como-crear-una-plantilla-php-desde-cero/" | pagePath=="/dos-tarjetas-sim-un-movil-revolucion-por-llegar/" | pagePath=="/teoria-juegos-explica-viralidad-redes-sociales/" )
+
+rpivotTable(gadata_top3, rows="Medium", cols=c("pagePath"), aggregatorName = "Count", rendererName = "Table")
+```
+
+<br>
+2. What are the exit rates for the pages with the most number of exits? How would you change the content of the page to reduce exit rate? 
+
+Answer:
+Page with greatest # of exits: (pagepath) /como-crear-una-plantilla-php-desde-cero/
+Exit rate for that page: exits/pageviews = 1229/2903 = 42.3%
+Tactics to reduce exit rate: Include more links to content on other areas of the website.
+
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+exitppage <-  group_by(gadata, factor(pagePath)) %>% summarise(exits = sum(exits))
+exitppage = data.frame(pages = exitppage$`factor(pagePath)`, exits = exitppage$exits)
+exitppage = exitppage[sort(exitppage$exits, decreasing =  TRUE, index.return = TRUE)$ix,]
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+show_data = data.frame(exitppage)
+m1<-gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+<br>
+3. What are the pages with the highest average time on page? Would you recommend the author to write more on these topics?
+
+<br>
+Answer:
+Pages with highest average time on page:
+/como-crear-una-plantilla-php-desde-cero/
+/aplicaciones-programas-gratuito-todas-necesidades-lista-software-libre/
+/teoria-juegos-explica-viralidad-redes-sociales/
+
+It seems that these technical pages also gain the most page views, so yes the author should write more on such topics.
+
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+timeppage <-  group_by(gadata, factor(pagePath)) %>% summarise(timeOnPage = sum(timeOnPage))
+timeppage = data.frame(pages = timeppage$`factor(pagePath)`, timeOnPage = timeppage$timeOnPage)
+timeppage = timeppage[sort(timeppage$timeOnPage, decreasing =  TRUE, index.return = TRUE)$ix,]
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+show_data = data.frame(timeppage)
+m1<-gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+<br>
+4. What combinations of sources and mediums attract the more amount of new visitors? Is their exit rate different to the existing visitors?
+
+Answer: 
+google + organic, and google + cpc, are the combinations attract most new visitors.
+
+Exit rates of new vs. existing visitors:
+<br> New = 3668/7620 = 48.1%
+<br> Existing = 508/1217 = 41.7%
+
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+gadata$source_medium = paste(gadata$source, gadata$Medium, sep=" ")
+source_mediumppage <-  group_by(gadata, factor(source_medium)) %>% summarise(users = sum(users))
+source_mediumppage = data.frame(pages = source_mediumppage$`factor(source_medium)`, users = source_mediumppage$users)
+source_mediumppage = source_mediumppage[sort(source_mediumppage$users, decreasing =  TRUE, index.return = TRUE)$ix,]
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+show_data = data.frame(source_mediumppage)
+m1<-gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+<br>
+Exits by user type:
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+exits_usertype <-  group_by(gadata, userType) %>% summarise(exits = sum(exits))
+exits_usertype = data.frame(userType = exits_usertype$userType, exits = exits_usertype$exits)
+exits_usertype = exits_usertype[sort(exits_usertype$exits, decreasing =  TRUE, index.return = TRUE)$ix,]
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+show_data = data.frame(exits_usertype)
+m1<-gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+<br>
+Views by user type:
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+views_usertype <-  group_by(gadata, userType) %>% summarise(pageviews = sum(pageviews))
+views_usertype = data.frame(userType = views_usertype$userType, pageviews = views_usertype$pageviews)
+views_usertype = views_usertype[sort(views_usertype$pageviews, decreasing =  TRUE, index.return = TRUE)$ix,]
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+show_data = data.frame(views_usertype)
+m1<-gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+<br>
+5. When medium is referral, which are the sources that attracted the highest number of pageviews? Based on this, should the author promote the content in any of these websites? Would it be better to invest in visitors coming from the medium 'cpc'?
+
+<br>
+Answer:
+Top 3 sources are:
+1	semalt.semalt.com
+2	facebook.com	
+3	linkedin.com
+
+Given that promotion on Facebook and LinkedIn would be difficult to focus on potential visitors, it would probably be more effective to focus most resources on promoting content on the semalt.com website. 
+
+<br>
+Page views when the medium is referrals:
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+gadata_referral = gadata[gadata$Medium =="referral", ]
+source_referral <-  group_by(gadata_referral, factor(source)) %>% summarise(pageviews = sum(pageviews))
+source_referral = data.frame(pages = source_referral$`factor(source)`, pageviews = source_referral$pageviews)
+source_referral = source_referral[sort(source_referral$pageviews, decreasing =  TRUE, index.return = TRUE)$ix,]
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+show_data = data.frame(source_referral)
+m1<-gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+<br>
+<br>
+Stats for each medium (below) show that indeed cpc does feed a lot of traffic into the website, but compared to the organic search, the pageview does not increase very much, so it may still be more economical to invest in improving traction from organic search, if the goal is to increase the pageviews in the website as well.
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+df <- data.frame(gadata)
+m1 <- summarise_each(group_by(df,Medium), funs(sum),entrances, pageviews, exits, users)
+```
+
+```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+m1 = m1[sort(m1$entrances, decreasing =  TRUE, index.return = TRUE)$ix,]
+m1<-gvisTable(m1,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(m1)+1)),allowHTML=TRUE,page='disable'))
+print(m1,'chart')
+```
+
+<br>
+<br>
