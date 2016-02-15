@@ -21,6 +21,21 @@ In the case of a company such as Airbnb, where customers rent rooms or apartment
 For this case, we have selected a public shared file with data from customers, and we will guide you through the different data that the file contains, and the different measures that we find interesting in order to analyze customers' behaviour. 
 
 
+It is very important to understand the columns, let's review its content:
+
+* **id_visitor**: the id of the visitor
+* **id_session**: the id of the session
+* **dim_session_number**: the number of session on a given day for a visitor
+* **dim_user_agent**: the user agent of the session
+* **dim_device_app_combo**: the parsed out device/app combo from user agent
+* **ds**: date stamp of session
+* **ts_min**: time of session start
+* **ts_max**: time of session end
+* **did_search**: binary flag indicating if the visitor performed a search during the session
+* **sent_message**: binary flag indicating if the visitor sent a message during the session
+* **sent_booking_request**: binary flag indicating if the visitor sent a booking request during the session
+
+
 <br>
 ##ANA
 
@@ -29,8 +44,8 @@ For this case, we have selected a public shared file with data from customers, a
 library(googleVis)
 library(dplyr)
 local_directory <- getwd()
-ProjectData <- read.csv("data/Airbnb_data.csv", sep=";", dec=",") # this contains only the matrix ProjectData
-t1 <- gvisTable(ProjectData[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(ProjectData) + 1)), allowHTML = TRUE, page = 'disable'))
+ProjectData <- read.csv("../data/Airbnb_data1.csv", sep=",", dec=".") # this contains only the matrix ProjectData
+t1 <- gvisTable(ProjectData[1:100,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(ProjectData) + 1)), allowHTML = TRUE, page = 'disable'))
 print(t1,'chart')
 ```
 
@@ -47,17 +62,36 @@ Before any other analysis, let's look at these ratios for the global set of cust
 int1 <- ProjectData[ProjectData$sent_booking_request == 1,]
 int2 <- select(int1, totalbookings = sum(sent_booking_request))
 int3 <- summarise(int2, percbookings = sum(totalbookings)*100/nrow(ProjectData))
-print(int3)
+numbookings <- paste(round(int3$percbookings, digits = 2), "%", sep="")
+
+int4 <- ProjectData[ProjectData$sent_message == 1,]
+int5 <- select(int4, totalmessages = sum(sent_message))
+int6 <- summarise(int5, percmessage = sum(totalmessages)*100/nrow(ProjectData))
+nummessages <- paste(round(int6$percmessage, digits = 2), "%", sep="")
+
+int7 <- int4[int4$sent_booking_request == 1,]
+int8 <- select(int7, subbookings = sum(sent_booking_request))
+int9 <- summarise(int8, percmessage = sum(subbookings)*100/nrow(int4))
+numbookings2 <- paste(round(int9$percmessage, digits = 2), "%", sep="")
 ```
+
+**Summary**
+
+- Percentage of visits that end in bookings: `r numbookings`
+
+- Percentage of times user send a message: `r nummessages`
+
+- Percentage of times user booked after a message: `r numbookings2`
 
 
 ## Data Description
- ##Dominik
- start lubridate
+##Dominik
+start lubridate
 
 
 ```{r}
-airbnbData = read.csv("Airbnb_data1.csv", header=TRUE, sep=",", dec=".")
+library(lubridate)
+airbnbData = read.csv(paste(local_directory,"../data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
 airbnbData[,"ts_min_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_min")])
 airbnbData[,"ts_max_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_max")])
 airbnbData[,"ts_diff"]=difftime(airbnbData[,which(colnames(airbnbData)=="ts_max_calc")],airbnbData[,which(colnames(airbnbData)=="ts_min_calc")])
@@ -76,7 +110,7 @@ by
 startDate=as.Date(min(airbnbData$ts_min_calc))
 endDate=as.Date(max(airbnbData$ts_max_calc))
 
-byDate=as.data.frame(as.Date(c(startDate:endDate)))
+byDate=as.data.frame(as.Date(c(startDate:endDate), origin))
 byDate[,"date"]=as.Date(byDate[,1], origin)
 byDate$`c(startDate:endDate)`=NULL
 
@@ -84,32 +118,102 @@ byDate$`c(startDate:endDate)`=NULL
 
 ```
 
+##LiLin
+Frequency of sessions by month:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+chooseCRANmirror(ind=1)
+install.packages("readxl")
+library(readxl) 
+airbnbdata = read_excel("data/Airbnb_data.xlsx")
+library(googleVis)
+require(lubridate)
+library(lubridate)
+dates <- airbnbdata[,"ds"]
+#dates <- as.matrix(dates)
+dates_m <- month(dates)
+dates_m <- t(t(dates_m))
+
+hist(dates_m, breaks= 0:12, col="lightblue", labels=TRUE, ylim=c(0,1400))
+library(ggplot2)
+#qplot(dates_m, geom="histogram", binwidth=1)
+```
+
+<br>
+Frequency of sessions by day of week (based on start time):
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+dates_day <- wday(dates, label=T)
+dates_day <- t(t(dates_day))
+
+dat <- as.Date(dates)
+Dayofweek_a <- format(dat , "%a")   #day of week
+Dayofweek <- as.numeric( format(dat , "%w") ) # numeric version of day of week
+hist(Dayofweek , breaks= -.5+0:7, labels= unique(Dayofweek_a[order(Dayofweek)]))
+```
+
+<br>
+Frequency of sessions by hour of day:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+dates_min <- airbnbdata[,"ts_min"]
+dates_h <- hour(dates_min)
+dates_h <- t(t(dates_h))
+
+hist(dates_h, breaks=24, col="lightblue", labels=TRUE, xlim=c(0,24), ylim=c(0,1200))
+#qplot(dates_h, geom="histogram", binwidth=1)
+```
+<br>
+
+And number of sessions by hour-blocks during the day:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+hist(dates_h, breaks=4, col="lightblue", labels=TRUE, xlim=c(0,24), ylim=c(0,3000))
+```
+
+<br>
+
+
+<br>
+
+This is the distribution of session duration in minutes:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+airbnbdata$ts_diff <- airbnbdata$ts_max - airbnbdata$ts_min
+airbnbdata$ts_diff <- airbnbdata$ts_diff / 60
+airbnbdata$ts_diff <- as.numeric(airbnbdata$ts_diff)
+hist(airbnbdata$ts_diff, main="Distribution of session duration (min)", col="lightblue", breaks=200, xlim=c(0,200))
+```
+
+<br>
+
+This is the distribution of total time spent by each user in one day (minutes):
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+if(!require(magrittr)){
+    install.packages("magrittr")
+    library(magrittr)
+}
+if(!require(dplyr)){
+    install.packages("dplyr")
+    library(dplyr)
+}
+airbnbdata$id_ds <- paste(airbnbdata$id_visitor,airbnbdata$ds)
+airbnbdata$flag <- 1
+
+time_user_day <-  group_by(airbnbdata, id_ds) %>% summarise(time = sum(ts_diff))
+hist(time_user_day$time, main="Disbribution of total time spent per day by each user",col="lightblue", breaks=200, xlim=c(0,200), ylim=c(0,2500))
+```
+
+<br>
+
+
 ##Shiksha
- 
+
 First, let's look at the data
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 local_directory=getwd()
-source(paste(local_directory,"/R/library.R",sep="/"))
-airbnbdata= within(read.csv(paste(local_directory,"/data/Airbnb_data1.csv",sep="/")),rm("X"))
+source(paste(local_directory,"../R/library.R",sep="/"))
+airbnbdata= within(read.csv(paste(local_directory,"../data/Airbnb_data1.csv",sep="/"), header=TRUE, sep=",", dec=".")
 library(googleVis)
 t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
 print(t1,'chart')
 ```
-
-It is very important to understand the columns, let's review its content:
-
-* **id_visitor**: the id of the visitor
-* **id_session**: the id of the session
-* **dim_session_number**: the number of session on a given day for a visitor
-* **dim_user_agent**: the user agent of the session
-* **dim_device_app_combo**: the parsed out device/app combo from user agent
-* **ds**: date stamp of session
-* **ts_min**: time of session start
-* **ts_max**: time of session end
-* **did_search**: binary flag indicating if the visitor performed a search during the session
-* **sent_message**: binary flag indicating if the visitor sent a message during the session
-* **sent_booking_request**: binary flag indicating if the visitor sent a booking request during the session
 
 ## Introductory analysis
 
@@ -117,34 +221,16 @@ It is very important to understand the columns, let's review its content:
 ##
 Number of visits per booking
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
-airbnb_visits = nrow(airbnbdata)
-class(airbnbdata)
-airbnb_bookings = sum(as.numeric(airbnbdata[11,]))
-Visit_per_booking = airbnb_visits/airbnb_bookings
-
+airbnb_visits = nrow(airbnbData)
+class(airbnbData)
+Visitsperbooking=nrow(airbnbData)/sum(airbnbData$sent_booking_request)
 ```
 
 For Looking at Desktop bookings with Chrome
 
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
-airbnb_visits_Chrome = airbnbdata[airbnbdata$dim_device_app_combo =="Desktop - Chrome", ]
-airbnb_visits_Chrome = nrow(airbnb_visits_Chrome)-1
-airbnb_bookings_Chrome = sum(airbnb_visits_Chrome[11,])
-Visit_per_booking_Chrome = airbnb_visits_Chrome/airbnb_bookings_Chrome
+airbnb_visits_Chrome = airbnbData[airbnbData$dim_device_app_combo =="Desktop - Chrome", ]
+airbnb_bookings_Chrome = sum(airbnb_visits_Chrome$sent_booking_request)
+Visit_per_booking_Chrome = nrow(airbnb_visits_Chrome)/airbnb_bookings_Chrome
 ```
 
-#airbnb_bookings <-  group_by(airbnb_visits, factor(source)) %>% #summarise(sent_booking_request = sum(sent_booking_request))
-#airbnb_bookings = data.frame(pages = airbnb_bookings$`factor(source)`, sent_booking_request = airbnb_bookings$sent_booking_request)
-airbnb_bookings = airbnb_bookings[sort(airbnb_bookings$sent_booking_request, decreasing =  TRUE, index.return = TRUE)$ix,]
-
-gadata_referral = gadata[gadata$Medium =="referral", ]
-source_referral <-  group_by(gadata_referral, factor(source)) %>% summarise(pageviews = sum(pageviews))
-source_referral = data.frame(pages = source_referral$`factor(source)`, pageviews = source_referral$pageviews)
-source_referral = source_referral[sort(source_referral$pageviews, decreasing =  TRUE, index.return = TRUE)$ix,]
-#```
-
-#```{r echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-show_data = data.frame(source_referral)
-m1<-gvisTable(show_data,options=list(showRowNumber=TRUE,width=1220, height=min(400,27*(nrow(show_data)+1)),allowHTML=TRUE,page='disable'))
-print(m1,'chart')
-```
