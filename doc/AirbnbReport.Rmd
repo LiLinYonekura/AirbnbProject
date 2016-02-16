@@ -202,16 +202,15 @@ axis(side=1, at=seq(-10,200,10), labels=seq(-10,200,10))
 
 
 ##Shiksha
-
 First, let's look at the data
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-local_directory=getwd()
-source(paste(local_directory,"../R/library.R",sep="/"))
-airbnbData = read.csv(paste(local_directory,"data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
-library(googleVis)
-t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
-print(t1,'chart')
+#local_directory=getwd()
+#source(paste(local_directory,"../R/library.R",sep="/"))
+#airbnbData = read.csv(paste(local_directory,"data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
+#library(googleVis)
+#t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
+#print(t1,'chart')
 ```
 
 ## Introductory analysis
