@@ -83,40 +83,97 @@ numbookings2 <- paste(round(int9$percmessage, digits = 2), "%", sep="")
 
 - Percentage of times user booked after a message: `r numbookings2`
 
+<br>
+As we can see, for every 100 visits to Airbnb, only less than 2 end up in a booking. Although we can't conclude whether this figure is high or low, it will be interesting to keep a record of how this percentage change along time, and whether it changes with specific actions Airbnb takes in marketing.
+<br>
+On the other hand, if we check the success ratio after sending a message, we can see it is much higher than without a message (for every 100 messages sent, over 8 bookings were realized). It would be useful to have more data about what it is that drives the customers to send messages. 
+<br>
+If Airbnb could gather the information about why customers send messages, it could develop more targeted campaigns, and could track whether the ratio of messages vs visits increases, and/or whether the ratio of bookings vs messages increases.
+
+<br>
 
 ## Data Description
 ##Dominik
 start lubridate
 
-
-```{r}
-library(lubridate)
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 airbnbData = read.csv(paste(local_directory,"../data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
+
+
 airbnbData[,"ts_min_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_min")])
 airbnbData[,"ts_max_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_max")])
 airbnbData[,"ts_diff"]=difftime(airbnbData[,which(colnames(airbnbData)=="ts_max_calc")],airbnbData[,which(colnames(airbnbData)=="ts_min_calc")])
-
 airbnbData[,"ts_min_date"]=as.Date(airbnbData[,which(colnames(airbnbData)=="ts_min_calc")])
 airbnbData[,"ts_max_date"]=as.Date(airbnbData[,which(colnames(airbnbData)=="ts_max_calc")])
 airbnbData[,"sameday_check"]=ifelse(airbnbData$ts_min_date==airbnbData$ts_max_date,0,1)
 
-
-#visitors as rownames
-byVisitor=unique(airbnbData$id_visitor)
-
-
-by
-
 startDate=as.Date(min(airbnbData$ts_min_calc))
 endDate=as.Date(max(airbnbData$ts_max_calc))
 
-byDate=as.data.frame(as.Date(c(startDate:endDate), origin))
-byDate[,"date"]=as.Date(byDate[,1], origin)
-byDate$`c(startDate:endDate)`=NULL
+
+
+#Analysis by Visitors
+ActivitybyVisitor = group_by(airbnbData, id_visitor) %>% summarise(count_id = count(id_visitor))
+
+#Activity by visitor
+countVisitor = c(ActivitybyVisitor[,1])
+ActivitybyVisitor[,"visitor_id"] = as.character(countVisitor$x)
+ActivitybyVisitor[,"count_id"] = countVisitor$freq
+ActivitybyVisitor[,"countid"] = byVisitor$count_id
+ActivitybyVisitor$count_id=NULL
+colnames(ActivitybyVisitor) = c("visitor_id", "count_id")
+
+
+#Time per Visitor
+TimebyVisitor = aggregate.data.frame(airbnbData$ts_diff, by = list(airbnbData$id_visitor), FUN = sum)
+TimeVisitor = c(TimebyVisitor)
+TimebyVisitor[,"visitor_id"] = as.character(TimeVisitor$Group.1)
+TimebyVisitor[, "visitor_duration"] = TimeVisitor$x
+TimebyVisitor$Group.1 = NULL
+TimebyVisitor$x = NULL
+
+
+#merging by visitor data
+byVisitor = join(ActivitybyVisitor, TimebyVisitor)
 
 
 
+ActivitybyDate = group_by(airbnbData, ts_min_date) %>% summarise(count = count(ts_min_date))
+#byDate[,"date"] = sort(unique(airbnbData$ts_min_date), decreasing = FALSE)
+rownames(ActivitybyDate) = c(sort(unique(airbnbData$ts_min_date), decreasing = FALSE))
+
+countDate = c(ActivitybyDate[,1])
+ActivitybyDate[,"date"] = as.Date(rownames(ActivitybyDate))
+ActivitybyDate[,"visits1"]=countDate$freq
+ActivitybyDate[,1] = NULL
+
+#Unique visitors per day
+UVbyDate = aggregate.data.frame(airbnbData$id_visitor, by = list(airbnbData$ts_min_date), FUN = count)
+
+TimebyDate = aggregate.data.frame(airbnbData$ts_diff, by = list(airbnbData$ts_min_date), FUN = sum)
+colnames(TimebyDate) = c("date", "duration1")
+
+Date=as.data.frame(as.Date(c(startDate:endDate), origin = "1970-01-01"))
+rownames(Date) = c(as.Date(c(startDate:endDate), origin = "1970-01-01"))
+colnames(Date) = c("date")
+
+
+byDate = join(Date, ActivitybyDate)
+byDate[,"visits"] = NAer(byDate$visits1, replace = 0)
+byDate[,"visits1"] = NULL
+byDate = join(byDate, TimebyDate)
+byDate[,"duration2"] = as.numeric(byDate$duration1)
+byDate[,"duration"] = NAer(byDate$duration2, replace = 0)
+byDate[,"duration1"] = NULL
+byDate[,"duration2"] = NULL
+byDate[,"daily_avg_dur"] = byDate$duration / byDate$visits / 60
+byDate[,"daily_avg_duration"]=NAer(byDate$daily_avg_dur, replace = 0)
+byDate[,"daily_avg_dur"] = NULL
+
+ggplot(byDate, mapping = aes(x = byDate$date, y = byDate$visits)) + geom_area()
+ggplot(byDate, mapping = aes(x = byDate$date, y = byDate$duration)) + geom_area()
 ```
+
 
 ##LiLin
 Frequency of sessions by month:
@@ -199,19 +256,36 @@ axis(side=1, at=seq(-10,200,10), labels=seq(-10,200,10))
 ```
 
 <br>
+<br>
 
+Below we see the relationship between time of day and booking. 
+It is interesting to see that the percentage in May appears to be unusally high. Perhaps this is being driven by easier search processes, which may be caused by a greater abundance of available Airbnb rooms. On the contrary this may be caused by a difference in price sensitivity of users during this month. Further data and analysis to assess the underlying drivers of this difference would be interesting as a next step, and may lead to some insights for how to improve the efficiency and ease of the user experience.
+
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+df_cor <- data.frame(dates_m, dates_h, airbnbdata$did_search, airbnbdata$sent_message, airbnbdata$sent_booking_request)
+df_by_m_book <- df_cor %>% group_by(dates_m) %>% summarise(Sent_booking_request=sum(airbnbdata.sent_booking_request==1), No_booking_request=sum(airbnbdata.sent_booking_request==0))
+df_by_m_book$Total_sessions <- df_by_m_book$Sent_booking_request + df_by_m_book$No_booking_request
+df_by_m_book$Visit_to_booking_percentage <- df_by_m_book$Sent_booking_request / df_by_m_book$Total_sessions
+
+plot(df_by_m_book$Visit_to_booking_percentage, type="o", main="% of booking requests to total visits, by month", ylab="% bookings to visits", xlab="Month", xaxt="n")
+axis(side=1, at=seq(0,12,1), labels=c("","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"))
+```
+
+
+<br>
 
 ##Shiksha
 
 First, let's look at the data
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-local_directory=getwd()
-source(paste(local_directory,"../R/library.R",sep="/"))
-airbnbData = read.csv(paste(local_directory,"data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
-library(googleVis)
-t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
-print(t1,'chart')
+#local_directory=getwd()
+#source(paste("../R/library.R"))
+#airbnbData = read.csv(paste(local_directory,"data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
+#library(googleVis)
+#t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
+#print(t1,'chart')
 ```
 
 ## Introductory analysis

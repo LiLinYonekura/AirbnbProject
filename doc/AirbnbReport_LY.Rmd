@@ -151,4 +151,15 @@ axis(side=1, at=seq(-10,200,10), labels=seq(-10,200,10))
 
 <br>
 
+Here we see the relationship between time of day and booking:
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+df_cor <- data.frame(dates_m, dates_h, airbnbdata$did_search, airbnbdata$sent_message, airbnbdata$sent_booking_request)
+df_by_m_book <- df_cor %>% group_by(dates_m) %>% summarise(Sent_booking_request=sum(airbnbdata.sent_booking_request==1), No_booking_request=sum(airbnbdata.sent_booking_request==0))
+df_by_m_book$Total_sessions <- df_by_m_book$Sent_booking_request + df_by_m_book$No_booking_request
+df_by_m_book$Visit_to_booking_percentage <- df_by_m_book$Sent_booking_request / df_by_m_book$Total_sessions
+
+plot(df_by_m_book$Visit_to_booking_percentage, type="o", main="% of booking requests to total visits, by month", ylab="% bookings to visits", xlab="Month", xaxt="n")
+axis(side=1, at=seq(0,12,1), labels=c("","Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"))
+```
+
 <br>
