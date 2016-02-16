@@ -208,7 +208,7 @@ First, let's look at the data
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 local_directory=getwd()
 source(paste(local_directory,"../R/library.R",sep="/"))
-airbnbdata= within(read.csv(paste(local_directory,"../data/Airbnb_data1.csv",sep="/"), header=TRUE, sep=",", dec=".")
+airbnbData = read.csv(paste(local_directory,"data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
 library(googleVis)
 t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
 print(t1,'chart')
@@ -233,3 +233,30 @@ airbnb_bookings_Chrome = sum(airbnb_visits_Chrome$sent_booking_request)
 Visit_per_booking_Chrome = nrow(airbnb_visits_Chrome)/airbnb_bookings_Chrome
 ```
 
+Number of messages per booking
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+messagesperbooking=sum(airbnbdata$sent_message)/sum(airbnbData$sent_booking_request)
+```
+
+For Looking at Desktop bookings with Chrome
+Number of message per booking
+
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+airbnb_visits_Chrome = airbnbData[airbnbData$dim_device_app_combo =="Desktop - Chrome", ]
+airbnb_bookings_Chrome = sum(airbnb_visits_Chrome$sent_booking_request)
+message_per_booking_Chrome = sum(airbnb_visits_Chrome$sent_message)/airbnb_bookings_Chrome
+```
+
+Number of searches per booking
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+searchesperbooking=sum(airbnbData$did_search)/sum(airbnbData$sent_booking_request)
+```
+
+For Looking at Desktop bookings with Chrome
+Number of searches per booking
+
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+airbnb_visits_Chrome = airbnbData[airbnbData$dim_device_app_combo =="Desktop - Chrome", ]
+airbnb_bookings_Chrome = sum(airbnb_visits_Chrome$sent_booking_request)
+search_per_booking_Chrome = sum(airbnb_visits_Chrome$did_search)/airbnb_bookings_Chrome
+```
