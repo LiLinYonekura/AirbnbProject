@@ -99,7 +99,6 @@ start lubridate
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 airbnbData = read.csv(paste(local_directory,"../data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
 
-
 airbnbData[,"ts_min_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_min")])
 airbnbData[,"ts_max_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_max")])
 airbnbData[,"ts_diff"]=difftime(airbnbData[,which(colnames(airbnbData)=="ts_max_calc")],airbnbData[,which(colnames(airbnbData)=="ts_min_calc")])
@@ -112,66 +111,130 @@ endDate=as.Date(max(airbnbData$ts_max_calc))
 
 
 
-#Analysis by Visitors
-ActivitybyVisitor = group_by(airbnbData, id_visitor) %>% summarise(count_id = count(id_visitor))
+#by Visitors
+VisitsbyVisitor = aggregate.data.frame(airbnbData$entrance, by = list(airbnbData$id_visitor), FUN=sum)
+VisitsbyVisitor[,"unique_visitor"] = as.character(VisitsbyVisitor$Group.1)
+VisitsbyVisitor[,"visits"] = as.numeric(VisitsbyVisitor$x)
+VisitsbyVisitor$Group.1 = NULL
+VisitsbyVisitor$x = NULL
 
-#Activity by visitor
-countVisitor = c(ActivitybyVisitor[,1])
-ActivitybyVisitor[,"visitor_id"] = as.character(countVisitor$x)
-ActivitybyVisitor[,"count_id"] = countVisitor$freq
-ActivitybyVisitor[,"countid"] = byVisitor$count_id
-ActivitybyVisitor$count_id=NULL
-colnames(ActivitybyVisitor) = c("visitor_id", "count_id")
+BookingsbyVisitor = aggregate.data.frame(airbnbData$sent_booking_request, by = list(airbnbData$id_visitor), FUN=sum)
+BookingsbyVisitor[,"unique_visitor"] = as.character(BookingsbyVisitor$Group.1)
+BookingsbyVisitor[,"bookings"] = as.numeric(BookingsbyVisitor$x)
+BookingsbyVisitor$Group.1 = NULL
+BookingsbyVisitor$x = NULL
 
+SearchesbyVisitor = aggregate.data.frame(airbnbData$did_search, by = list(airbnbData$id_visitor), FUN=sum)
+SearchesbyVisitor[,"unique_visitor"] = as.character(SearchesbyVisitor$Group.1)
+SearchesbyVisitor[,"searches"] = as.numeric(SearchesbyVisitor$x)
+SearchesbyVisitor$Group.1 = NULL
+SearchesbyVisitor$x = NULL
 
-#Time per Visitor
-TimebyVisitor = aggregate.data.frame(airbnbData$ts_diff, by = list(airbnbData$id_visitor), FUN = sum)
-TimeVisitor = c(TimebyVisitor)
-TimebyVisitor[,"visitor_id"] = as.character(TimeVisitor$Group.1)
-TimebyVisitor[, "visitor_duration"] = TimeVisitor$x
+MessagesbyVisitor = aggregate.data.frame(airbnbData$sent_message, by = list(airbnbData$id_visitor), FUN=sum)
+MessagesbyVisitor[,"unique_visitor"] = as.character(MessagesbyVisitor$Group.1)
+MessagesbyVisitor[,"messages"] = as.numeric(MessagesbyVisitor$x)
+MessagesbyVisitor$Group.1 = NULL
+MessagesbyVisitor$x = NULL
+
+TimebyVisitor = aggregate.data.frame(airbnbData$ts_diff, by = list(airbnbData$id_visitor), FUN=sum)
+TimebyVisitor[,"unique_visitor"] = as.character(TimebyVisitor$Group.1)
+TimebyVisitor[,"avg_sess_dur_mins"] = as.numeric(TimebyVisitor$x / VisitsbyVisitor$visits / 60)
 TimebyVisitor$Group.1 = NULL
 TimebyVisitor$x = NULL
 
+byVisitor = join(VisitsbyVisitor, BookingsbyVisitor)
+byVisitor = join(byVisitor, SearchesbyVisitor)
+byVisitor = join(byVisitor, MessagesbyVisitor)
+byVisitor = join(byVisitor, TimebyVisitor)
 
-#merging by visitor data
-byVisitor = join(ActivitybyVisitor, TimebyVisitor)
+rm(BookingsbyVisitor, MessagesbyVisitor, SearchesbyVisitor, VisitsbyVisitor, TimebyVisitor)
 
 
 
-ActivitybyDate = group_by(airbnbData, ts_min_date) %>% summarise(count = count(ts_min_date))
-#byDate[,"date"] = sort(unique(airbnbData$ts_min_date), decreasing = FALSE)
-rownames(ActivitybyDate) = c(sort(unique(airbnbData$ts_min_date), decreasing = FALSE))
-
-countDate = c(ActivitybyDate[,1])
-ActivitybyDate[,"date"] = as.Date(rownames(ActivitybyDate))
-ActivitybyDate[,"visits1"]=countDate$freq
-ActivitybyDate[,1] = NULL
-
-#Unique visitors per day
-UVbyDate = aggregate.data.frame(airbnbData$id_visitor, by = list(airbnbData$ts_min_date), FUN = count)
-
-TimebyDate = aggregate.data.frame(airbnbData$ts_diff, by = list(airbnbData$ts_min_date), FUN = sum)
-colnames(TimebyDate) = c("date", "duration1")
+#by Date
 
 Date=as.data.frame(as.Date(c(startDate:endDate), origin = "1970-01-01"))
 rownames(Date) = c(as.Date(c(startDate:endDate), origin = "1970-01-01"))
 colnames(Date) = c("date")
 
+VisitsbyDate = aggregate.data.frame(airbnbData$entrance, by = list(airbnbData$ts_min_date), FUN=sum)
+VisitsbyDate[,"date"] = as.Date(VisitsbyDate$Group.1)
+VisitsbyDate[,"visits"] = as.numeric(VisitsbyDate$x)
+VisitsbyDate$Group.1 = NULL
+VisitsbyDate$x = NULL
 
-byDate = join(Date, ActivitybyDate)
-byDate[,"visits"] = NAer(byDate$visits1, replace = 0)
-byDate[,"visits1"] = NULL
+BookingsbyDate = aggregate.data.frame(airbnbData$sent_booking_request, by = list(airbnbData$ts_min_date), FUN=sum)
+BookingsbyDate[,"date"] = as.Date(BookingsbyDate$Group.1)
+BookingsbyDate[,"bookings"] = as.numeric(BookingsbyDate$x)
+BookingsbyDate$Group.1 = NULL
+BookingsbyDate$x = NULL
+
+SearchesbyDate = aggregate.data.frame(airbnbData$did_search, by = list(airbnbData$ts_min_date), FUN=sum)
+SearchesbyDate[,"date"] = as.Date(SearchesbyDate$Group.1)
+SearchesbyDate[,"searches"] = as.numeric(SearchesbyDate$x)
+SearchesbyDate$Group.1 = NULL
+SearchesbyDate$x = NULL
+
+MessagesbyDate = aggregate.data.frame(airbnbData$sent_message, by = list(airbnbData$ts_min_date), FUN=sum)
+MessagesbyDate[,"date"] = as.Date(MessagesbyDate$Group.1)
+MessagesbyDate[,"messages"] = as.numeric(MessagesbyDate$x)
+MessagesbyDate$Group.1 = NULL
+MessagesbyDate$x = NULL
+
+TimebyDate = aggregate.data.frame(airbnbData$ts_diff, by = list(airbnbData$ts_min_date), FUN=sum)
+TimebyDate[,"date"] = as.Date(TimebyDate$Group.1)
+TimebyDate[,"avg_sess_dur_mins"] = as.numeric(TimebyDate$x / VisitsbyDate$visits / 60)
+TimebyDate$Group.1 = NULL
+TimebyDate$x = NULL
+
+### to finalize
+VisitorbyDate = aggregate.data.frame(airbnbData$id_visitor, by = list(airbnbData$ts_min_date), FUN=count)
+
+
+byDate = join(Date, VisitsbyDate)
+byDate = join(byDate, BookingsbyDate)
+byDate = join(byDate, SearchesbyDate)
+byDate = join(byDate, MessagesbyDate)
 byDate = join(byDate, TimebyDate)
-byDate[,"duration2"] = as.numeric(byDate$duration1)
-byDate[,"duration"] = NAer(byDate$duration2, replace = 0)
-byDate[,"duration1"] = NULL
-byDate[,"duration2"] = NULL
-byDate[,"daily_avg_dur"] = byDate$duration / byDate$visits / 60
-byDate[,"daily_avg_duration"]=NAer(byDate$daily_avg_dur, replace = 0)
-byDate[,"daily_avg_dur"] = NULL
+
+rm(BookingsbyDate, MessagesbyDate, SearchesbyDate, VisitsbyDate, TimebyDate)
 
 ggplot(byDate, mapping = aes(x = byDate$date, y = byDate$visits)) + geom_area()
 ggplot(byDate, mapping = aes(x = byDate$date, y = byDate$duration)) + geom_area()
+
+
+
+#by device
+VisitsbyDevice = aggregate.data.frame(airbnbData$entrance, by = list(airbnbData$dim_device_app_combo), FUN = sum)
+VisitsbyDevice[,"Device_App"] = as.character(VisitsbyDevice$Group.1)
+VisitsbyDevice[,"visits"] = as.numeric(VisitsbyDevice$x)
+VisitsbyDevice$Group.1 = NULL
+VisitsbyDevice$x = NULL
+
+BookingsbyDevice = aggregate.data.frame(airbnbData$sent_booking_request, by = list(airbnbData$dim_device_app_combo), FUN = sum)
+BookingsbyDevice[,"Device_App"] = as.character(BookingsbyDevice$Group.1)
+BookingsbyDevice[,"bookings"] = as.numeric(BookingsbyDevice$x)
+BookingsbyDevice$Group.1 = NULL
+BookingsbyDevice$x = NULL
+
+SearchesbyDevice = aggregate.data.frame(airbnbData$did_search, by = list(airbnbData$dim_device_app_combo), FUN = sum)
+SearchesbyDevice[,"Device_App"] = as.character(SearchesbyDevice$Group.1)
+SearchesbyDevice[,"searches"] = as.numeric(SearchesbyDevice$x)
+SearchesbyDevice$Group.1 = NULL
+SearchesbyDevice$x = NULL
+
+MessagesbyDevice = aggregate.data.frame(airbnbData$sent_message, by = list(airbnbData$dim_device_app_combo), FUN = sum)
+MessagesbyDevice[,"Device_App"] = as.character(MessagesbyDevice$Group.1)
+MessagesbyDevice[,"messages"] = as.numeric(MessagesbyDevice$x)
+MessagesbyDevice$Group.1 = NULL
+MessagesbyDevice$x = NULL
+
+byDevice = join(VisitsbyDevice, BookingsbyDevice)
+byDevice = join(byDevice, SearchesbyDevice)
+byDevice = join(byDevice, MessagesbyDevice)
+
+rm(BookingsbyDevice, MessagesbyDevice, SearchesbyDevice, VisitsbyDevice)
+
 ```
 
 
@@ -276,12 +339,11 @@ axis(side=1, at=seq(0,12,1), labels=c("","Jan","Feb","Mar","Apr","May","Jun","Ju
 <br>
 
 ##Shiksha
-
 First, let's look at the data
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 #local_directory=getwd()
-#source(paste("../R/library.R"))
+#source(paste(local_directory,"../R/library.R",sep="/"))
 #airbnbData = read.csv(paste(local_directory,"data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
 #library(googleVis)
 #t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
