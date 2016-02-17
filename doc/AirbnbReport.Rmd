@@ -96,7 +96,7 @@ If Airbnb could gather the information about why customers send messages, it cou
 ##Dominik
 start lubridate
 
-```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 airbnbData = read.csv(paste(local_directory,"../data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
 
 airbnbData[,"ts_min_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_min")])
@@ -235,7 +235,7 @@ byDevice = join(byDevice, MessagesbyDevice)
 
 rm(BookingsbyDevice, MessagesbyDevice, SearchesbyDevice, VisitsbyDevice)
 
-```
+
 
 
 ##LiLin
@@ -257,7 +257,7 @@ library(ggplot2)
 <br>
 Frequency of sessions by day of week (based on start time):
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-dates_day <- wday(dates, label=T)
+dates_day <- wday(dates)
 dates_day <- t(t(dates_day))
 
 dat <- as.Date(dates)
@@ -312,10 +312,11 @@ This is the distribution of total time spent by each user in one day (minutes):
 airbnbdata$id_ds <- paste(airbnbdata$id_visitor,airbnbdata$ds)
 airbnbdata$flag <- 1
 
+###THE SUMMARISE FUNCTION IS NOT WORKING ANYMORE
 time_user_day <-  group_by(airbnbdata, id_ds) %>% summarise(time = sum(ts_diff))
 bins <- c(seq(-10,10000,10))
-hist(time_user_day$time, labels=TRUE, main="Disbribution of total time spent per day by each user",col="lightblue", breaks=bins, xlim=c(-10,200), ylim=c(0,2500), xaxt="n", xlab="Total mins spent on Airbnb per day")
-axis(side=1, at=seq(-10,200,10), labels=seq(-10,200,10))
+#hist(time_user_day$time, labels=TRUE, main="Disbribution of total time spent per day by each user",col="lightblue", breaks=bins, xlim=c(-10,200), ylim=c(0,2500), xaxt="n", xlab="Total mins spent on Airbnb per day")
+#axis(side=1, at=seq(-10,200,10), labels=seq(-10,200,10))
 ```
 
 <br>
@@ -344,7 +345,7 @@ First, let's look at the data
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 #local_directory=getwd()
 #source(paste(local_directory,"../R/library.R",sep="/"))
-#airbnbData = read.csv(paste(local_directory,"data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
+airbnbData = read.csv(paste(local_directory,"../data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
 #library(googleVis)
 #t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
 #print(t1,'chart')
