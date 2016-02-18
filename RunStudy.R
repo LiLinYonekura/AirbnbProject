@@ -19,6 +19,9 @@
 # Clean the workspace
 rm(list=ls())
 
+#Set AirbnbProject as Directory
+#setwd("..")
+
 # Set up the working directory
 local_directory <- getwd()
 
