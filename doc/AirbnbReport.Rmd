@@ -292,17 +292,20 @@ hist(Dayofweek , breaks= -.5+0:7, labels= unique(Dayofweek_a[order(Dayofweek)]))
 Frequency of sessions by hour of day:
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 dates_min <- airbnbdata[,"ts_min"]
-dates_min <- as.matrix(dates_min)
+#dates_min <- as.matrix(dates_min)
 dates_h <- hour(dates_min)
 dates_h[dates_h==0] <- 24
 dates_h <- t(t(dates_h))
 dates_h_forhist <- dates_h + 1
 dates_h_forhist[dates_h_forhist==2] <- 1.5
 
-hist(dates_h_forhist, breaks=24, col="lightblue", labels=TRUE, xlim=c(0,25), ylim=c(0,750), xaxt="n", main="Number of sessions by hour of day")
+opar=par(ps=12)
+hist(dates_h_forhist, breaks=24, col="lightblue", labels=TRUE, xlim=c(0,25), ylim=c(0,750), xaxt="n", main="Number of sessions by hour of day", xlab="Hour of day", cex.main=1.5, cex.axis=1.2, cex.lab=1.2)
 axis(side=1, at=seq(0,25,1), labels=seq(0,25,1))
+opar  
 #qplot(dates_h, geom="histogram", binwidth=1)
 ```
+
 <br>
 
 And number of sessions by hour-blocks during the day:
