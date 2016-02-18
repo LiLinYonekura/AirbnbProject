@@ -259,7 +259,9 @@ ggplot(byDevice, aes(x = byDevice$Device_App, y = byDevice$visits)) + geom_bar(s
 
 
 ##LiLin
+<br>
 Frequency of sessions by month:
+<br>
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 #chooseCRANmirror(ind=1)
 airbnbdata = read_excel("../data/Airbnb_data.xlsx")
