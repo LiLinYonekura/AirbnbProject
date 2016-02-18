@@ -260,6 +260,12 @@ ggplot(byDevice, aes(x = byDevice$Device_App, y = byDevice$visits)) + geom_bar(s
 
 ##LiLin
 <br>
+When we look at the trend in visits by month, we see that September and December have the highest traffic, which is likely being driven by the summer and winter vacation periods.
+By day of week, we find that traffic appears to be somewhat higher on weekdays in comparison to weekends. Given that the majority of visits are being done through mobile devices this may be a result of users spending time on Airbnb during their commutes or during breaks in the work day.
+In terms of hourly traffic, there is a significant drop in traffic between 3pm-7pm. We do not have enough data to determine the causes, but this suggests that online marketing efforts such as paid-search should be reduced during this time period to optimize cost-benefit. 
+<br>
+
+<br>
 Frequency of sessions by month:
 <br>
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
@@ -309,6 +315,10 @@ opar
 <br>
 
 And number of sessions by hour-blocks during the day:
+<br>
+The majority of each session is between one and ten minutes long, and the majority of users spend less than ten minutes in total per day on the website. We would need to conduct more advanced analytics to determine whether bookings are correlated with longer time spent per day, but given the usage habits for the Airbnb platform reflects 10 minute time frames, from a website/app development perspective, Airbnb should focus on providing an efficient and fasts search experience when provides the information the user needs before she/he moves onto their  next task and lose interest.
+<br>
+
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 hist(dates_h_forhist, breaks=5, col="lightblue", labels=TRUE, xlim=c(1,25), ylim=c(0,3000), xaxt="n", main="Number of sessions by hour-blocks of the day")
 axis(side=1, at=seq(1,25,1), labels=seq(1,25,1))
@@ -316,8 +326,6 @@ axis(side=1, at=seq(1,25,1), labels=seq(1,25,1))
 ```
 
 <br>
-
-
 <br>
 
 This is the distribution of session duration in minutes:
