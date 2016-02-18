@@ -334,12 +334,16 @@ This is the distribution of total time spent by each user in one day (minutes):
 airbnbdata$id_ds <- paste(airbnbdata$id_visitor,airbnbdata$ds)
 airbnbdata$flag <- 1
 
-###THE SUMMARISE FUNCTION IS NOT WORKING ANYMORE
-time_user_day <-  group_by(airbnbdata, id_ds) %>% summarise(time = sum(ts_diff))
+time_user_day <- aggregate.data.frame(airbnbdata$ts_diff, by=list(airbnbdata$id_ds), FUN=sum)
+colnames(time_user_day) <- c("ID_and_date", "time")
+
+#time_user_day <-  group_by(airbnbdata, id_ds) %>% summarise(time = sum(ts_diff))
 bins <- c(seq(-10,10000,10))
-#hist(time_user_day$time, labels=TRUE, main="Disbribution of total time spent per day by each user",col="lightblue", breaks=bins, xlim=c(-10,200), ylim=c(0,2500), xaxt="n", xlab="Total mins spent on Airbnb per day")
-#axis(side=1, at=seq(-10,200,10), labels=seq(-10,200,10))
+hist(time_user_day$time, labels=TRUE, main="Disbribution of total time spent per day by each user",col="lightblue", breaks=bins, xlim=c(-10,200), ylim=c(0,2500), xaxt="n", xlab="Total mins spent on Airbnb per day")
+axis(side=1, at=seq(-10,200,10), labels=seq(-10,200,10))
+
 ```
+
 
 <br>
 <br>
