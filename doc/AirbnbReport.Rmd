@@ -443,4 +443,38 @@ For comparison of number of messages sent. On the whole number of messages per b
 
 Similar comparison for the number of searches gives: Total number of searches per booking `r searchesperbooking` and for desktop `r search_per_booking_Chrome`.
 
+**Device comparison**
+
+
+To visualise across all the different devices:
+
+Let us create a new table (dataframe) with all the numbers grouped for the devices using the aggregate function
+
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+Device_data= aggregate.data.frame(airbnbData[,9:11],by=list(airbnbData$dim_device_app_combo), FUN=sum)
+Device_number= aggregate.data.frame(airbnbData$entrance, by=list(airbnbData$dim_device_app_combo),FUN=sum)
+Device_data$Total=Device_number$x
+```
+
+Now we define per booking metrics for the devices:
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+Device_data$messageperbooking=Device_data$sent_message/Device_data$sent_booking_request
+Device_data$searchperbooking=Device_data$did_search/Device_data$sent_booking_request
+Device_data$visitsperbooking=Device_data$Total/Device_data$sent_booking_request
+
+```
+
+We need to remove NA values
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+Device_data[is.na(Device_data)]=0
+```
+
+Let us plot the metrics
+```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+library(ggplot2)
+library(reshape2)
+
+
+
+```
 
