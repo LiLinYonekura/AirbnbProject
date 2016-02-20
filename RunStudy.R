@@ -28,10 +28,6 @@ local_directory <- getwd()
 # Install and load required packages
 source(paste(local_directory,"R/library.R", sep="/"))
 
-#Install 64 bit 
-#http://www.java.com/en/download/manual.jsp
-
-# Install  qdap package
 
 
 # This is the name of the Report and Slides (in the doc directory) to generate 
