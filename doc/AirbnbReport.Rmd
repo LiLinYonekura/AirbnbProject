@@ -37,10 +37,12 @@ It is very important to understand the columns, let's review its content:
 
 
 <br>
-##ANA
+
 
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+##ANA
+
 library(googleVis)
 library(dplyr)
 local_directory <- getwd()
@@ -58,7 +60,7 @@ Let's have a look at the conversion rates for the users. We are going to analyze
 
 Before any other analysis, let's look at these ratios for the global set of customers (without considering the number of session or other parameters):
 
-```{r, echo=TRUE, message=FALSE, prompt=FALSE, results='asis'}
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 int1 <- ProjectData[ProjectData$sent_booking_request == 1,]
 int2 <- select(int1, totalbookings = sum(sent_booking_request))
 int3 <- summarise(int2, percbookings = sum(totalbookings)*100/nrow(ProjectData))
@@ -94,13 +96,14 @@ If Airbnb could gather the information about why customers send messages, it cou
 
 ## Data Description
 
-##Dominik
+
 
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+##Dominik
 library("lubridate")
 library("plyr")
-library("dplyr")
+#library("dplyr")
 library("qdap")
 library("tidyr")
 library("shiny")
@@ -257,16 +260,18 @@ ggplot(byDevice, aes(x = byDevice$Device_App, y = byDevice$visits)) + geom_bar(s
 ```
 
 
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 
 ##LiLin
+```
+
 <br>
 When we look at the trend in visits by month, we see that September and December have the highest traffic, which is likely being driven by the summer and winter vacation periods.
 By day of week, we find that traffic appears to be somewhat higher on weekdays in comparison to weekends. Given that the majority of visits are being done through mobile devices this may be a result of users spending time on Airbnb during their commutes or during breaks in the work day.
 In terms of hourly traffic, there is a significant drop in traffic between 3pm-7pm. We do not have enough data to determine the causes, but this suggests that online marketing efforts such as paid-search should be reduced during this time period to optimize cost-benefit. 
 <br>
 
-<br>
-Frequency of sessions by month:
+
 <br>
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 #chooseCRANmirror(ind=1)
@@ -277,59 +282,61 @@ dates <- as.matrix(dates)
 dates_m <- month(dates)
 dates_m <- t(t(dates_m))
 
-hist(dates_m, breaks= 0:13, col="lightblue", labels=TRUE, xlim=c(0,12), ylim=c(0,1400), xlab="Month (1=Jan etc)")
+hist(dates_m, breaks= 0:13, col="lightblue", labels=TRUE, xlim=c(0,12), ylim=c(0,1400), xlab="Month (1=Jan etc)", main="Frequency of sessions by month")
 library(ggplot2)
 #qplot(dates_m, geom="histogram", binwidth=1)
 ```
 
 <br>
-Frequency of sessions by day of week (based on start time):
+
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#Frequency of sessions by day of week (based on start time):
 dates_day <- wday(dates)
 dates_day <- t(t(dates_day))
 
 dat <- as.Date(dates)
 Dayofweek_a <- format(dat , "%a")   #day of week
 Dayofweek <- as.numeric( format(dat , "%w") ) # numeric version of day of week
-hist(Dayofweek , breaks= -.5+0:7, labels= unique(Dayofweek_a[order(Dayofweek)]))
+hist(Dayofweek , breaks= -.5+0:7, labels= unique(Dayofweek_a[order(Dayofweek)]), ylim=c(0,1400), main="Number of sessions by day of week")
 ```
 
 <br>
-Frequency of sessions by hour of day:
+
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#Frequency of sessions by hour of day:
 dates_min <- airbnbdata[,"ts_min"]
-#dates_min <- as.matrix(dates_min)
+dates_min <- as.matrix(dates_min)
 dates_h <- hour(dates_min)
 dates_h[dates_h==0] <- 24
 dates_h <- t(t(dates_h))
 dates_h_forhist <- dates_h + 1
 dates_h_forhist[dates_h_forhist==2] <- 1.5
 
-opar=par(ps=12)
+opar=par(ps=10) #this changes the default font size for the graph
 hist(dates_h_forhist, breaks=24, col="lightblue", labels=TRUE, xlim=c(0,25), ylim=c(0,750), xaxt="n", main="Number of sessions by hour of day", xlab="Hour of day", cex.main=1.5, cex.axis=1.2, cex.lab=1.2)
 axis(side=1, at=seq(0,25,1), labels=seq(0,25,1))
-opar  
+opar  # this resets the font size
 #qplot(dates_h, geom="histogram", binwidth=1)
 ```
-
 <br>
-
-And number of sessions by hour-blocks during the day:
-<br>
-The majority of each session is between one and ten minutes long, and the majority of users spend less than ten minutes in total per day on the website. We would need to conduct more advanced analytics to determine whether bookings are correlated with longer time spent per day, but given the usage habits for the Airbnb platform reflects 10 minute time frames, from a website/app development perspective, Airbnb should focus on providing an efficient and fasts search experience when provides the information the user needs before she/he moves onto their  next task and lose interest.
 <br>
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-hist(dates_h_forhist, breaks=5, col="lightblue", labels=TRUE, xlim=c(1,25), ylim=c(0,3000), xaxt="n", main="Number of sessions by hour-blocks of the day")
+#And number of sessions by hour-blocks during the day:
+hist(dates_h_forhist, breaks=5, col="lightblue", labels=TRUE, xlim=c(1,25), ylim=c(0,3000), xaxt="n", main="Number of sessions by hour-blocks of the day", ylab="Hour (1=01:00, 24=midnight")
 axis(side=1, at=seq(1,25,1), labels=seq(1,25,1))
 
 ```
 
 <br>
+
+When we observe the trend in session duration, we find that the majority of each session is between one and ten minutes long, and the majority of users spend less than ten minutes in total per day on the website. We would need to conduct more advanced analytics to determine whether bookings are correlated with longer time spent per day, but given the usage habits for the Airbnb platform reflects 10 minute time frames, from a website/app development perspective, Airbnb should focus on providing an efficient and fasts search experience when provides the information the user needs before she/he moves onto their  next task and lose interest.
+<br>
 <br>
 
-This is the distribution of session duration in minutes:
+
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#This is the distribution of session duration in minutes:
 airbnbdata$ts_diff <- airbnbdata$ts_max - airbnbdata$ts_min
 airbnbdata$ts_diff <- airbnbdata$ts_diff / 60
 airbnbdata$ts_diff <- as.numeric(airbnbdata$ts_diff)
@@ -339,9 +346,9 @@ hist(airbnbdata$ts_diff, labels=TRUE, main="Distribution of session duration (mi
 
 <br>
 
-This is the distribution of total time spent by each user in one day (minutes):
-```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#This is the distribution of total time spent by each user in one day (minutes):
 airbnbdata$id_ds <- paste(airbnbdata$id_visitor,airbnbdata$ds)
 airbnbdata$flag <- 1
 
@@ -350,7 +357,7 @@ colnames(time_user_day) <- c("ID_and_date", "time")
 
 #time_user_day <-  group_by(airbnbdata, id_ds) %>% summarise(time = sum(ts_diff))
 bins <- c(seq(-10,10000,10))
-hist(time_user_day$time, labels=TRUE, main="Disbribution of total time spent per day by each user",col="lightblue", breaks=bins, xlim=c(-10,200), ylim=c(0,2500), xaxt="n", xlab="Total mins spent on Airbnb per day")
+hist(time_user_day$time, labels=TRUE, main="Disbribution of total time (mins) spent per day by each user",col="lightblue", breaks=bins, xlim=c(-10,200), ylim=c(0,2500), xaxt="n", xlab="Total mins spent on Airbnb per day")
 axis(side=1, at=seq(-10,200,10), labels=seq(-10,200,10))
 
 ```
@@ -365,7 +372,9 @@ It is interesting to see that the percentage in May appears to be unusally high.
 <br>
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 df_cor <- data.frame(dates_m, dates_h, airbnbdata$did_search, airbnbdata$sent_message, airbnbdata$sent_booking_request)
+#The group_by function sometimes does not work
 df_by_m_book <- df_cor %>% group_by(dates_m) %>% summarise(Sent_booking_request=sum(airbnbdata.sent_booking_request==1), No_booking_request=sum(airbnbdata.sent_booking_request==0))
+
 df_by_m_book$Total_sessions <- df_by_m_book$Sent_booking_request + df_by_m_book$No_booking_request
 df_by_m_book$Visit_to_booking_percentage <- df_by_m_book$Sent_booking_request / df_by_m_book$Total_sessions
 
