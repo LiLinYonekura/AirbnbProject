@@ -97,29 +97,6 @@ If Airbnb could gather the information about why customers send messages, it cou
 ##Seasonility, visitor and device analysis 
 In the following we will visually analyze the data by date, unique visitor and device. This helps Airbnb to get a better intuition about who their customers are and how they behave. In the following we will visualize data along the date line, unique visitors and devices/app from which they accessed Airbnb.
 
-```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-# Required R libraries (need to be installed - it can take a few minutes the first time you run the project)
-
-# installs all necessary libraries from CRAN
-get_libraries <- function(filenames_list) { 
-  lapply(filenames_list,function(thelibrary){    
-    if (do.call(require,list(thelibrary)) == FALSE) 
-      do.call(install.packages,list(thelibrary)) 
-    do.call(suppressPackageStartupMessages(library),list(thelibrary))
-  })
-}
-libraries_used=c("tidyr", "shiny", "scales", "stats", "xlsx")
-
-library("lubridate")
-library("plyr")
-library("dplyr")
-library("tidyr")
-library("shiny")
-library("ggplot2")
-library("scales")
-library("stats")
-library("xlsx")
-```
 
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
