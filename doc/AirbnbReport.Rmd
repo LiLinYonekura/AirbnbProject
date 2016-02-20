@@ -564,12 +564,7 @@ Device_data$searchperbooking=Device_data$did_search/Device_data$sent_booking_req
 Device_data$visitsperbooking=Device_data$Total/Device_data$sent_booking_request
 
 ```
-<br>
-Let us look at the table
-```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center"}
-t2 <- gvisTable(Device_data, options = list(showRowNumber = FALSE, width = 1920, height = min(400,27*(nrow(byDevice) + 1)), allowHTML = TRUE, page = 'disable'))
-print(t2,'chart')
-```
+
 <br>
 We need to remove NA values
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
