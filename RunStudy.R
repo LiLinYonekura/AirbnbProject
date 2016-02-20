@@ -9,7 +9,6 @@
 #
 # In this case study we will use the Airbnb data
 # We will use the following packages:
-# RGoogleAnalytics: to connect with GA API and download the data
 # dplyr: to manipulate the data
 # lattice, ggplot2: to visualize the data
 # stringr: to manipulate text
