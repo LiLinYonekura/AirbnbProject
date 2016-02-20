@@ -95,170 +95,298 @@ If Airbnb could gather the information about why customers send messages, it cou
 <br>
 
 ##Seasonality analysis
+In the following we will visually analyze the data by date, unique visitor and device. This helps Airbnb to get a better intuition about who their customers are and how they behave. In the following we will visualize data along the date line, unique visitors and devices/app from which they accessed Airbnb.
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-##Dominik
+# Required R libraries (need to be installed - it can take a few minutes the first time you run the project)
+
+# installs all necessary libraries from CRAN
+get_libraries <- function(filenames_list) { 
+  lapply(filenames_list,function(thelibrary){    
+    if (do.call(require,list(thelibrary)) == FALSE) 
+      do.call(install.packages,list(thelibrary)) 
+    do.call(suppressPackageStartupMessages(library),list(thelibrary))
+  })
+}
+libraries_used=c("tidyr", "shiny", "scales", "stats", "xlsx")
+
 library("lubridate")
 library("plyr")
-#library("dplyr")
-library("qdap")
+library("dplyr")
 library("tidyr")
 library("shiny")
 library("ggplot2")
 library("scales")
 library("stats")
 library("xlsx")
-
-setwd("..")
-local_directory <- getwd()
-
-airbnbData = read.csv(paste(local_directory,"/data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
-
-airbnbData[,"ts_min_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_min")])
-airbnbData[,"ts_max_calc"]=dmy_hm(airbnbData[,which(colnames(airbnbData)=="ts_max")])
-airbnbData[,"ts_diff"]=difftime(airbnbData[,which(colnames(airbnbData)=="ts_max_calc")],airbnbData[,which(colnames(airbnbData)=="ts_min_calc")])
-airbnbData[,"ts_min_date"]=as.Date(airbnbData[,which(colnames(airbnbData)=="ts_min_calc")])
-airbnbData[,"ts_max_date"]=as.Date(airbnbData[,which(colnames(airbnbData)=="ts_max_calc")])
-airbnbData[,"sameday_check"]=ifelse(airbnbData$ts_min_date==airbnbData$ts_max_date,0,1)
-airbnbData[,"entrance"]=1
+```
 
 
-startDate=as.Date(min(airbnbData$ts_min_calc))
-endDate=as.Date(max(airbnbData$ts_max_calc))
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+# Here we add further columns to the ProjecData and change the data class for some. i.e. start date, end date, time difference, and entrance, as flag.
+
+ProjectData[,"ts_min_calc"]=dmy_hm(ProjectData[,which(colnames(ProjectData)=="ts_min")])
+ProjectData[,"ts_max_calc"]=dmy_hm(ProjectData[,which(colnames(ProjectData)=="ts_max")])
+ProjectData[,"ts_diff"]=difftime(ProjectData[,which(colnames(ProjectData)=="ts_max_calc")],ProjectData[,which(colnames(ProjectData)=="ts_min_calc")])
+ProjectData[,"ts_min_date"]=as.Date(ProjectData[,which(colnames(ProjectData)=="ts_min_calc")])
+ProjectData[,"ts_max_date"]=as.Date(ProjectData[,which(colnames(ProjectData)=="ts_max_calc")])
+ProjectData[,"sameday_check"]=ifelse(ProjectData$ts_min_date==ProjectData$ts_max_date,0,1)
+ProjectData[,"entrance"]=1
+
+# Here we create the dynamic start and end date of the data set. 
+startDate=as.Date(min(ProjectData$ts_min_calc))
+endDate=as.Date(max(ProjectData$ts_max_calc))
+```
 
 
-
-#by Visitors
-VisitsbyVisitor = aggregate.data.frame(airbnbData$entrance, by = list(airbnbData$id_visitor), FUN=sum)
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#by Visitors: pulling  the relevant data together from the main data.frame and ordering it by unique visitor (for visits, bookings, searches, messages and average session duration)
+VisitsbyVisitor = aggregate.data.frame(ProjectData$entrance, by = list(ProjectData$id_visitor), FUN=sum)
   VisitsbyVisitor[,"unique_visitor"] = as.character(VisitsbyVisitor$Group.1)
   VisitsbyVisitor[,"visits"] = as.numeric(VisitsbyVisitor$x)
   VisitsbyVisitor$Group.1 = NULL
   VisitsbyVisitor$x = NULL
 
-BookingsbyVisitor = aggregate.data.frame(airbnbData$sent_booking_request, by = list(airbnbData$id_visitor), FUN=sum)
+BookingsbyVisitor = aggregate.data.frame(ProjectData$sent_booking_request, by = list(ProjectData$id_visitor), FUN=sum)
   BookingsbyVisitor[,"unique_visitor"] = as.character(BookingsbyVisitor$Group.1)
   BookingsbyVisitor[,"bookings"] = as.numeric(BookingsbyVisitor$x)
   BookingsbyVisitor$Group.1 = NULL
   BookingsbyVisitor$x = NULL
 
-SearchesbyVisitor = aggregate.data.frame(airbnbData$did_search, by = list(airbnbData$id_visitor), FUN=sum)
+SearchesbyVisitor = aggregate.data.frame(ProjectData$did_search, by = list(ProjectData$id_visitor), FUN=sum)
   SearchesbyVisitor[,"unique_visitor"] = as.character(SearchesbyVisitor$Group.1)
   SearchesbyVisitor[,"searches"] = as.numeric(SearchesbyVisitor$x)
   SearchesbyVisitor$Group.1 = NULL
   SearchesbyVisitor$x = NULL
 
-MessagesbyVisitor = aggregate.data.frame(airbnbData$sent_message, by = list(airbnbData$id_visitor), FUN=sum)
+MessagesbyVisitor = aggregate.data.frame(ProjectData$sent_message, by = list(ProjectData$id_visitor), FUN=sum)
   MessagesbyVisitor[,"unique_visitor"] = as.character(MessagesbyVisitor$Group.1)
   MessagesbyVisitor[,"messages"] = as.numeric(MessagesbyVisitor$x)
   MessagesbyVisitor$Group.1 = NULL
   MessagesbyVisitor$x = NULL
 
-TimebyVisitor = aggregate.data.frame(airbnbData$ts_diff, by = list(airbnbData$id_visitor), FUN=sum)
+TimebyVisitor = aggregate.data.frame(ProjectData$ts_diff, by = list(ProjectData$id_visitor), FUN=sum)
   TimebyVisitor[,"unique_visitor"] = as.character(TimebyVisitor$Group.1)
-  TimebyVisitor[,"avg_sess_dur_mins"] = as.numeric(TimebyVisitor$x / VisitsbyVisitor$visits / 60)
+  TimebyVisitor[,"avg_sess_dur_mins"] = round(as.numeric(TimebyVisitor$x / VisitsbyVisitor$visits / 60), 2)
   TimebyVisitor$Group.1 = NULL
   TimebyVisitor$x = NULL
 
+# Here we merge all the subsets of ordere data into one data.frame used for the analysis
 byVisitor = join(VisitsbyVisitor, BookingsbyVisitor)
   byVisitor = join(byVisitor, SearchesbyVisitor)
   byVisitor = join(byVisitor, MessagesbyVisitor)
   byVisitor = join(byVisitor, TimebyVisitor)
 
-rm(BookingsbyVisitor, MessagesbyVisitor, SearchesbyVisitor, VisitsbyVisitor, TimebyVisitor)
+```
 
 
 
-#by Date
-
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#by Date: pulling  the relevant data together from the main data.frame and ordering it by date (for visits, bookings, searches, messages and average session duration)
 Date=as.data.frame(as.Date(c(startDate:endDate), origin = "1970-01-01"))
 rownames(Date) = c(as.Date(c(startDate:endDate), origin = "1970-01-01"))
 colnames(Date) = c("date")
 
-VisitsbyDate = aggregate.data.frame(airbnbData$entrance, by = list(airbnbData$ts_min_date), FUN=sum)
+VisitsbyDate = aggregate.data.frame(ProjectData$entrance, by = list(ProjectData$ts_min_date), FUN=sum)
   VisitsbyDate[,"date"] = as.Date(VisitsbyDate$Group.1)
   VisitsbyDate[,"visits"] = as.numeric(VisitsbyDate$x)
   VisitsbyDate$Group.1 = NULL
   VisitsbyDate$x = NULL
 
-BookingsbyDate = aggregate.data.frame(airbnbData$sent_booking_request, by = list(airbnbData$ts_min_date), FUN=sum)
+BookingsbyDate = aggregate.data.frame(ProjectData$sent_booking_request, by = list(ProjectData$ts_min_date), FUN=sum)
   BookingsbyDate[,"date"] = as.Date(BookingsbyDate$Group.1)
   BookingsbyDate[,"bookings"] = as.numeric(BookingsbyDate$x)
   BookingsbyDate$Group.1 = NULL
   BookingsbyDate$x = NULL
 
-SearchesbyDate = aggregate.data.frame(airbnbData$did_search, by = list(airbnbData$ts_min_date), FUN=sum)
+SearchesbyDate = aggregate.data.frame(ProjectData$did_search, by = list(ProjectData$ts_min_date), FUN=sum)
   SearchesbyDate[,"date"] = as.Date(SearchesbyDate$Group.1)
   SearchesbyDate[,"searches"] = as.numeric(SearchesbyDate$x)
   SearchesbyDate$Group.1 = NULL
   SearchesbyDate$x = NULL
 
-MessagesbyDate = aggregate.data.frame(airbnbData$sent_message, by = list(airbnbData$ts_min_date), FUN=sum)
+MessagesbyDate = aggregate.data.frame(ProjectData$sent_message, by = list(ProjectData$ts_min_date), FUN=sum)
   MessagesbyDate[,"date"] = as.Date(MessagesbyDate$Group.1)
   MessagesbyDate[,"messages"] = as.numeric(MessagesbyDate$x)
   MessagesbyDate$Group.1 = NULL
   MessagesbyDate$x = NULL
 
-TimebyDate = aggregate.data.frame(airbnbData$ts_diff, by = list(airbnbData$ts_min_date), FUN=sum)
+TimebyDate = aggregate.data.frame(ProjectData$ts_diff, by = list(ProjectData$ts_min_date), FUN=sum)
   TimebyDate[,"date"] = as.Date(TimebyDate$Group.1)
-  TimebyDate[,"avg_sess_dur_mins"] = as.numeric(TimebyDate$x / VisitsbyDate$visits / 60)
+  TimebyDate[,"avg_sess_dur_mins"] = round(as.numeric(TimebyDate$x / VisitsbyDate$visits / 60), 2)
   TimebyDate$Group.1 = NULL
   TimebyDate$x = NULL
-  
+
+# Here we merge all the subsets of ordered data into one data.frame used for the analysis and formate the date column to class = date
 byDate = join(Date, VisitsbyDate)
   byDate = join(byDate, BookingsbyDate)
   byDate = join(byDate, SearchesbyDate)
   byDate = join(byDate, MessagesbyDate)
   byDate = join(byDate, TimebyDate)
-  byDate = NAer(byDate, replace = 0)
   byDate[,"date"] = as.Date(Date$date)
 
-rm(BookingsbyDate, MessagesbyDate, SearchesbyDate, VisitsbyDate, TimebyDate)
-
-### define start date and end Date with slider
-
-#sliderInput(byDate$date, "Date", min = startDate, max = endDate, value = c(startDate, endDate), animate = TRUE)
-
-ggplot(byDate, aes(x = byDate$date, y = byDate$visits)) + geom_bar(stat = "identity") + theme_minimal() + ylab("Frequency") + xlab("Date") + scale_x_date(limits = c(startDate, endDate), date_breaks = "3 weeks") + theme(axis.text.x=element_text(angle = 45, vjust = .5))
-
-#by device
-VisitsbyDevice = aggregate.data.frame(airbnbData$entrance, by = list(airbnbData$dim_device_app_combo), FUN = sum)
-VisitsbyDevice[,"Device_App"] = as.character(VisitsbyDevice$Group.1)
-VisitsbyDevice[,"visits"] = as.numeric(VisitsbyDevice$x)
-VisitsbyDevice$Group.1 = NULL
-VisitsbyDevice$x = NULL
-
-BookingsbyDevice = aggregate.data.frame(airbnbData$sent_booking_request, by = list(airbnbData$dim_device_app_combo), FUN = sum)
-BookingsbyDevice[,"Device_App"] = as.character(BookingsbyDevice$Group.1)
-BookingsbyDevice[,"bookings"] = as.numeric(BookingsbyDevice$x)
-BookingsbyDevice$Group.1 = NULL
-BookingsbyDevice$x = NULL
-
-SearchesbyDevice = aggregate.data.frame(airbnbData$did_search, by = list(airbnbData$dim_device_app_combo), FUN = sum)
-SearchesbyDevice[,"Device_App"] = as.character(SearchesbyDevice$Group.1)
-SearchesbyDevice[,"searches"] = as.numeric(SearchesbyDevice$x)
-SearchesbyDevice$Group.1 = NULL
-SearchesbyDevice$x = NULL
-
-MessagesbyDevice = aggregate.data.frame(airbnbData$sent_message, by = list(airbnbData$dim_device_app_combo), FUN = sum)
-MessagesbyDevice[,"Device_App"] = as.character(MessagesbyDevice$Group.1)
-MessagesbyDevice[,"messages"] = as.numeric(MessagesbyDevice$x)
-MessagesbyDevice$Group.1 = NULL
-MessagesbyDevice$x = NULL
-
-byDevice = join(VisitsbyDevice, BookingsbyDevice)
-byDevice = join(byDevice, SearchesbyDevice)
-byDevice = join(byDevice, MessagesbyDevice)
-
-rm(BookingsbyDevice, MessagesbyDevice, SearchesbyDevice, VisitsbyDevice)
-
-
-#byDevice1 = order(byDevice
-ggplot(byDevice, aes(x = byDevice$Device_App, y = byDevice$visits)) + geom_bar(stat = "identity") + theme_minimal() + ylab("# of Visits") + xlab("Device") + theme(axis.text.x=element_text(angle = 45, vjust = .5))
 ```
 
 
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
+#by device: pulling  the relevant data together from the main data.frame and ordering it by device and app (for visits, bookings, searches)
+VisitsbyDevice = aggregate.data.frame(ProjectData$entrance, by = list(ProjectData$dim_device_app_combo), FUN = sum)
+  VisitsbyDevice[,"Device_App"] = as.character(VisitsbyDevice$Group.1)
+  VisitsbyDevice[,"visits"] = as.numeric(VisitsbyDevice$x)
+  VisitsbyDevice$Group.1 = NULL
+  VisitsbyDevice$x = NULL
 
-**Time analysis**
+BookingsbyDevice = aggregate.data.frame(ProjectData$sent_booking_request, by = list(ProjectData$dim_device_app_combo), FUN = sum)
+  BookingsbyDevice[,"Device_App"] = as.character(BookingsbyDevice$Group.1)
+  BookingsbyDevice[,"bookings"] = as.numeric(BookingsbyDevice$x)
+  BookingsbyDevice$Group.1 = NULL
+  BookingsbyDevice$x = NULL
+
+SearchesbyDevice = aggregate.data.frame(ProjectData$did_search, by = list(ProjectData$dim_device_app_combo), FUN = sum)
+  SearchesbyDevice[,"Device_App"] = as.character(SearchesbyDevice$Group.1)
+  SearchesbyDevice[,"searches"] = as.numeric(SearchesbyDevice$x)
+  SearchesbyDevice$Group.1 = NULL
+  SearchesbyDevice$x = NULL
+
+MessagesbyDevice = aggregate.data.frame(ProjectData$sent_message, by = list(ProjectData$dim_device_app_combo), FUN = sum)
+  MessagesbyDevice[,"Device_App"] = as.character(MessagesbyDevice$Group.1)
+  MessagesbyDevice[,"messages"] = as.numeric(MessagesbyDevice$x)
+  MessagesbyDevice$Group.1 = NULL
+  MessagesbyDevice$x = NULL
+
+# Here we merge all the subsets of ordered data into one data.frame used for the analysis
+byDevice = join(VisitsbyDevice, BookingsbyDevice)
+  byDevice = join(byDevice, SearchesbyDevice)
+ byDevice = join(byDevice, MessagesbyDevice)
+
+#cleaning up the environment with all the sub data.frames that were merged into the three groups byDate, byVisitor, and by Device
+rm(VisitsbyDevice,VisitsbyDate,VisitsbyVisitor,BookingsbyDevice,BookingsbyDate,BookingsbyVisitor,SearchesbyDevice,SearchesbyDate,SearchesbyVisitor,MessagesbyDevice,MessagesbyDate,MessagesbyVisitor,TimebyDate,TimebyVisitor)
+```
+<br>
+<br>
+
+## Visualization of data by date
+
+<br>
+Here we grouped all data by date with the goal to see whether we can identify any seasonal trends with regards to customer activity. 
+<br>
+First let's look at the data sorted by date, between `r startDate` and `r endDate`. Below are the first 10 entries:
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center"}
+td1 <- gvisTable(byDate[1:10,],options = list(showRowNumber = FALSE, width = 1920, height = min(400,27*(nrow(byDate) + 1)), allowHTML = TRUE, page = 'disable', margin))
+print(td1,'chart')
+```
+<br>
+<br>
+Looking at the data we see spikes in activity around September, as well as the end of the year and early February. It is interesting to see that while there seems to be some seasonality effect with the number of visits this does not fully translate in a similar pattern for the number of searches.
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byDate, aes(x = byDate$Date, y = byDate$visits)) + geom_area(data = byDate, aes(x = date, y = visits, fill = "Visits"), stat = "identity") + theme_minimal() + ylab("# of Counts") + xlab("Date") + theme(axis.text.x=element_text(angle = 45, vjust = .5)) + ggtitle("# Visits & Searches by Date") + scale_x_date(limits = c(startDate, endDate), date_breaks = "3 weeks") + scale_y_discrete(breaks = pretty_breaks(n=5)) + geom_area(data = byDate, aes(x = date, y = searches, fill = "Searches")) + labs(fill="", colour="")
+```
+<br>
+<br>
+A similar pattern also holds for messages and bookings which are relatively evenly spread throughout the year.
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byDate, aes(x = byDate$Date, y = byDate$visits)) + geom_area(data = byDate, aes(x = date, y = messages, fill = "Messages"), stat = "identity", size = 0.5) + geom_area(data = byDate, aes(x = date, y = bookings, fill = "Bookings"), stat = "identity", size = 0.5) + theme_minimal() + ylab("# of Counts") + xlab("Date") + theme(axis.text.x=element_text(angle = 45, vjust = .5)) + ggtitle("# Messages & Bookings by Date") + scale_x_date(limits = c(startDate, endDate), date_breaks = "3 weeks") + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="")
+```
+<br>
+<br>
+However, the average session duration was significantly higher around September than other times of the year. Further research needs to be done in order to completely understand this spike.
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byDate, aes(x = byDate$Date, y = byDate$visits)) + geom_bar(data = byDate, aes(x = date, y = avg_sess_dur_mins, fill = "Session Duration"), stat = "identity", size = 0.5) + theme_minimal() + ylab("Minutes") + xlab("Date") + theme(axis.text.x=element_text(angle = 45, vjust = .5)) + ggtitle("Average Session Duration by Date") + scale_x_date(limits = c(startDate, endDate), date_breaks = "3 weeks") + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="")
+```
+<br>
+<br>
+<br>
+<br>
+<br>
+
+## Visualization of data by unique visitor
+
+<br>
+Let's have a look at the first 10 entries of the data by unique visitor:
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align='center'}
+td1 <- gvisTable(byVisitor[1:10,],options = list(showRowNumber = FALSE, width = 1920, height = min(400,27*(nrow(byVisitor) + 1)), allowHTML = TRUE, page = 'disable'), )
+print(td1,'chart')
+```
+<br>
+<br>
+Here we see that only a very small part of all unique visitors account for the majority share of all visits. Yet the number of searches is driven by a broader unique visitor base. 
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byVisitor, aes(x = reorder(byVisitor$unique_visitor,-byVisitor$visits), y = byVisitor$visits)) + geom_bar(stat = "identity", aes(fill = "Visits")) + theme_minimal() + ylab("# of Counts") + xlab("Unique Visitors") + theme(axis.text.x=element_text(angle = 45, vjust = .5)) + ggtitle("# Visits & Searches by Unique Visitor") + scale_x_discrete(breaks = pretty_breaks(n=7)) + scale_y_discrete(breaks = pretty_breaks(n=5)) + geom_bar(data=byVisitor, aes(x = unique_visitor, y = searches, fill = "Searches"), stat = "identity") + labs(fill="", colour="")
+```
+<br>
+<br>
+Below we see the Searches, Messages and Bookings by Unique Visitors.
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byVisitor, aes(x = reorder(byVisitor$unique_visitor,-byVisitor$visits), y = byVisitor$visits)) + geom_bar(data=byVisitor, stat = "identity", aes(y=messages, fill = "Messages"), position = "dodge") + theme_minimal() + ylab("# of Counts") + xlab("Unique Visitors (ordered by # of Visits)") + theme(axis.text.x=element_text(angle = 45, vjust = .5)) + ggtitle("# Searches, Messages and Bookings by Unique Visitors") + scale_x_discrete(breaks = pretty_breaks(n=7)) + scale_y_discrete(breaks = pretty_breaks(n=5)) + geom_bar(data=byVisitor, aes(x = unique_visitor, y = searches, fill = "Searches"), position = "dodge", stat = "identity") + geom_bar(data=byVisitor, aes(x = unique_visitor, y = bookings, fill = "Bookings"), position = "dodge", stat = "identity") + labs(fill="", colour="")
+```
+<br>
+<br>
+Below we show the average time unique visitors spent per session.
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byVisitor, aes(x = reorder(byVisitor$unique_visitor,-byVisitor$visits), y = byVisitor$visits)) + geom_bar(data=byVisitor, stat = "identity", aes(y=avg_sess_dur_mins, fill = "Session Duration"), position = "dodge") + theme_minimal() + ylab("Minutes") + xlab("Unique Visitors (ordered by # of Visits)") + theme(axis.text.x=element_text(angle = 45, vjust = .5)) + ggtitle("Average Session Duration by Unique Visitor") + scale_x_discrete(breaks = pretty_breaks(n=7)) + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="", colour="")
+```
+
+
+## Visualization of data by by device
+
+<br>
+
+Lastly, let's have a look at the data by device and app from which the customers accessed Airbnb.
+<br>
+<br>
+
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center"}
+td1 <- gvisTable(byDevice[1:10,],options = list(showRowNumber = FALSE, width = 1920, height = min(400,27*(nrow(byDevice) + 1)), allowHTML = TRUE, page = 'disable'))
+print(td1,'chart')
+```
+<br>
+<br>
+Below you can find the graphical output of our data analysis by device and app. We see that most people access Airbnb from the Iphones apps. Access via desktop also relatively wide spread, however, Android users are less active, or form a smaller part of Airbnb users.
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center"}
+ggplot(byDevice, aes(x = reorder(byDevice$Device_App,-byDevice$visits), y = byDevice$visits)) + geom_bar(stat = "identity", aes(fill = "Visits")) + theme_minimal() + ylab("# of Visits") + xlab("Device & App") + theme(axis.text.x=element_text(angle = 45, vjust = .5)) + ggtitle("# of Visits by Device & App") + labs(fill="")
+```
+<br>
+<br>
+Below we see the Searches, Messages and Bookings activity by Device and App.
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byDevice, aes(x = reorder(byDevice$Device_App,-byDevice$visits), y = searches)) + geom_bar(data=byDevice, aes(x = Device_App, y = searches, fill = "Searches"), stat = "identity") + theme_minimal() + ylab("# of Counts") + xlab("Devices & App (ordered by # of Visits)") + theme(axis.text.x=element_text(angle = 90, vjust = .5)) + ggtitle("# Searches by Devices & App") + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="", colour="") + theme(axis.text.x=element_text(angle = 45, vjust = .5))
+```
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byDevice, aes(x = reorder(byDevice$Device_App,-byDevice$visits), y = messages)) + geom_bar(data=byDevice, aes(x = Device_App, y = messages , fill = "Messages"), stat = "identity") + theme_minimal() + ylab("# of Counts") + xlab("Devices & App (ordered by # of Visits)") + theme(axis.text.x=element_text(angle = 90, vjust = .5)) + ggtitle("# Messages by Devices & App") + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="", colour="") + theme(axis.text.x=element_text(angle = 45, vjust = .5))
+```
+<br>
+<br>
+```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis', fig.align="center", warning=FALSE}
+ggplot(byDevice, aes(x = reorder(byDevice$Device_App,-byDevice$visits), y = bookings)) + geom_bar(data=byDevice, aes(x = Device_App, y = bookings , fill = "Bookings"), stat = "identity") + theme_minimal() + ylab("# of Counts") + xlab("Devices & App (ordered by # of Visits)") + theme(axis.text.x=element_text(angle = 90, vjust = .5)) + ggtitle("# Bookings by Devices & App") + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="", colour="") + theme(axis.text.x=element_text(angle = 45, vjust = .5))
+```
+<br>
+<br>
+<br>
+
+
+##Time analysis
 
 
 <br>
