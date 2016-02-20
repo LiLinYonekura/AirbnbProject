@@ -11,7 +11,7 @@ get_libraries <- function(filenames_list) {
 libraries_used=c("dplyr","lattice","devtools","knitr","graphics",
                  "grDevices","xtable","Hmisc","vegan","fpc","GPArotation","slidify",
                  "FactoMineR","cluster","psych","stringr","googleVis", "png",
-                 "ggplot2","googleVis", "gridExtra","rmarkdown","readxl","lubridate","magrittr","plyr","data.table")
+                 "ggplot2","googleVis", "gridExtra","rmarkdown","readxl","lubridate","magrittr","plyr","data.table", "scales")
 get_libraries(libraries_used)
 # "qdap",
 if (do.call(require,list("RGoogleAnalytics")) == FALSE) 
