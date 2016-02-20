@@ -257,10 +257,9 @@ ggplot(byDevice, aes(x = byDevice$Device_App, y = byDevice$visits)) + geom_bar(s
 ```
 
 
-```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 
 **Time analysis**
-```
+
 
 <br>
 When we look at the trend in visits by month, we see that September and December have the highest traffic, which is likely being driven by the summer and winter vacation periods.
