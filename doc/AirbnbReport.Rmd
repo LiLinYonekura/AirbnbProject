@@ -491,6 +491,7 @@ axis(side=1, at=seq(0,12,1), labels=c("","Jan","Feb","Mar","Apr","May","Jun","Ju
 ##
 Number of visits per booking
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
+airbnbData=ProjectData
 airbnb_visits = nrow(airbnbData)
 class(airbnbData)
 Visitsperbooking=nrow(airbnbData)/sum(airbnbData$sent_booking_request)
@@ -587,7 +588,7 @@ library(reshape2)
 
 ggplot(Device_data_no_inf, aes(x=Group.1)) +geom_bar(aes(y=visitsperbooking), fill="blue", stat = "identity") + theme_minimal() + ylab("Visits per booking") + xlab("Devices & App") + theme(axis.text.x=element_text(angle = 90, vjust = .5)) + ggtitle("Visits per Booking by Devices & App") + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="", colour="") + theme(axis.text.x=element_text(angle = 45, vjust = .5))
 ```
-
+<br>
 Next we analyse search per booking
 
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
@@ -596,7 +597,7 @@ library(reshape2)
 
 ggplot(Device_data_no_inf, aes(x=Group.1)) +geom_bar(aes(y=searchperbooking), fill="blue", stat = "identity") + theme_minimal() + ylab("Searches per booking") + xlab("Devices & App") + theme(axis.text.x=element_text(angle = 90, vjust = .5)) + ggtitle("Searches per Booking by Devices & App") + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="", colour="") + theme(axis.text.x=element_text(angle = 45, vjust = .5))
 ```
-
+<br>
 Followed by messages per booking
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
 library(ggplot2)
@@ -604,6 +605,7 @@ library(reshape2)
 
 ggplot(Device_data_no_inf, aes(x=Group.1)) +geom_bar(aes(y=messageperbooking), fill="blue", stat = "identity") + theme_minimal() + ylab("Message per booking") + xlab("Devices & App") + theme(axis.text.x=element_text(angle = 90, vjust = .5)) + ggtitle("Messages per Booking by Devices & App") + scale_y_discrete(breaks = pretty_breaks(n=5)) + labs(fill="", colour="") + theme(axis.text.x=element_text(angle = 45, vjust = .5))
 ```
+<br>
 So we have seen how customers behave across time, seasons, and devices. This is integral to better pricing.
 
 And to live happily ever after.
