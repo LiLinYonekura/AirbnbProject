@@ -20,6 +20,7 @@ In the case of a company such as Airbnb, where customers rent rooms or apartment
 
 For this case, we have selected a public shared file with data from customers, and we will guide you through the different data that the file contains, and the different measures that we find interesting in order to analyze customers' behaviour. 
 
+The raw data file is sourced from airbnb website and contains data from May 2014 to May 2015. It is publically available data put up by airbnb as a part of an analytics competition.
 
 It is very important to understand the columns, let's review its content:
 
@@ -38,11 +39,10 @@ It is very important to understand the columns, let's review its content:
 
 <br>
 
-
+Let us look at the data in available form. We have taken first hundred rows of data to display the data:
+<br>
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-##ANA
-
 library(googleVis)
 library(dplyr)
 local_directory <- getwd()
@@ -58,7 +58,7 @@ Let's have a look at the conversion rates for the users. We are going to analyze
 - the percentage of times that users send a message to the owner
 - the perc. of times that a booking is realized after a message has been sent
 
-Before any other analysis, let's look at these ratios for the global set of customers (without considering the number of session or other parameters):
+Before any other analysis, let's look at these ratios (Each block of code corresponds to one ratio) for the global set of customers (without considering the number of session or other parameters):
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 int1 <- ProjectData[ProjectData$sent_booking_request == 1,]
@@ -94,10 +94,7 @@ If Airbnb could gather the information about why customers send messages, it cou
 
 <br>
 
-## Data Description
-
-
-
+##Seasonality analysis
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 ##Dominik
@@ -262,7 +259,7 @@ ggplot(byDevice, aes(x = byDevice$Device_App, y = byDevice$visits)) + geom_bar(s
 
 ```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
 
-##LiLin
+**Time analysis**
 ```
 
 <br>
@@ -385,21 +382,8 @@ axis(side=1, at=seq(0,12,1), labels=c("","Jan","Feb","Mar","Apr","May","Jun","Ju
 
 <br>
 
-##Shiksha
-First, let's look at the data
-
-```{r, echo=FALSE, message=FALSE, prompt=FALSE, results='asis'}
-#local_directory=getwd()
-#source(paste(local_directory,"../R/library.R",sep="/"))
-#airbnbData = read.csv(paste(local_directory,"data/Airbnb_data1.csv", sep="/"), header=TRUE, sep=",", dec=".")
-#library(googleVis)
-#t1 <- gvisTable(airbnbdata[,],options = list(showRowNumber = FALSE, width = 800, height = min(400,27*(nrow(airbnbdata) + 1)), allowHTML = TRUE, page = 'disable'))
-#print(t1,'chart')
-```
-
-## Introductory analysis
-
-
+**Analysis of booking Device**
+<br>
 ##
 Number of visits per booking
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
@@ -407,7 +391,7 @@ airbnb_visits = nrow(airbnbData)
 class(airbnbData)
 Visitsperbooking=nrow(airbnbData)/sum(airbnbData$sent_booking_request)
 ```
-
+<br>
 For Looking at Desktop bookings with Chrome
 
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
@@ -415,13 +399,14 @@ airbnb_visits_Chrome = airbnbData[airbnbData$dim_device_app_combo =="Desktop - C
 airbnb_bookings_Chrome = sum(airbnb_visits_Chrome$sent_booking_request)
 Visit_per_booking_Chrome = nrow(airbnb_visits_Chrome)/airbnb_bookings_Chrome
 ```
-
+<br>
 Number of messages per booking
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
 messagesperbooking=sum(airbnbdata$sent_message)/sum(airbnbData$sent_booking_request)
 ```
-
+<br>
 For Looking at Desktop bookings with Chrome
+<br>
 Number of message per booking
 
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
@@ -429,13 +414,14 @@ airbnb_visits_Chrome = airbnbData[airbnbData$dim_device_app_combo =="Desktop - C
 airbnb_bookings_Chrome = sum(airbnb_visits_Chrome$sent_booking_request)
 message_per_booking_Chrome = sum(airbnb_visits_Chrome$sent_message)/airbnb_bookings_Chrome
 ```
-
+<br>
 Number of searches per booking
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
 searchesperbooking=sum(airbnbData$did_search)/sum(airbnbData$sent_booking_request)
 ```
-
+<br>
 For Looking at Desktop bookings with Chrome
+<br>
 Number of searches per booking
 
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
@@ -443,7 +429,7 @@ airbnb_visits_Chrome = airbnbData[airbnbData$dim_device_app_combo =="Desktop - C
 airbnb_bookings_Chrome = sum(airbnb_visits_Chrome$sent_booking_request)
 search_per_booking_Chrome = sum(airbnb_visits_Chrome$did_search)/airbnb_bookings_Chrome
 ```
-
+<br>
 **Summary**
 
 The number of visits/booking is `r Visitsperbooking` and for desktop users this changes to `r Visit_per_booking_Chrome` .
@@ -451,6 +437,7 @@ The number of visits/booking is `r Visitsperbooking` and for desktop users this 
 For comparison of number of messages sent. On the whole number of messages per booking are `r messagesperbooking` and for desktop `r message_per_booking_Chrome`.
 
 Similar comparison for the number of searches gives: Total number of searches per booking `r searchesperbooking` and for desktop `r search_per_booking_Chrome`.
+<br>
 
 **Device comparison**
 
@@ -464,7 +451,7 @@ Device_data= aggregate.data.frame(airbnbData[,9:11],by=list(airbnbData$dim_devic
 Device_number= aggregate.data.frame(airbnbData$entrance, by=list(airbnbData$dim_device_app_combo),FUN=sum)
 Device_data$Total=Device_number$x
 ```
-
+<br>
 Now we define per booking metrics for the devices:
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
 Device_data$messageperbooking=Device_data$sent_message/Device_data$sent_booking_request
@@ -472,18 +459,20 @@ Device_data$searchperbooking=Device_data$did_search/Device_data$sent_booking_req
 Device_data$visitsperbooking=Device_data$Total/Device_data$sent_booking_request
 
 ```
+<br>
+Let us look at the table
 
+<br>
 We need to remove NA values
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
 Device_data[is.na(Device_data)]=0
 ```
-
+<br>
 Let us plot the metrics
 ```{r echo=TRUE, eval=TRUE, tidy=TRUE}
 library(ggplot2)
 library(reshape2)
-
-
+ggplot(Device_data, aes(x=Group.1))+geom_line(aes(y=messageperbooking),colour="blue")+geom_line(aes(y=searchperbooking), colour="grey")+geom_line(aes(y=Visitsperbooking), colour="red")+ylab(label="Metrics")+xlab("Device")
 
 ```
 
